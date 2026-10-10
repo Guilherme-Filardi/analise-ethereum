@@ -129,10 +129,15 @@ feche a janela).
 
 | Tela | O que mostra |
 |---|---|
-| **Hoje** | O veredito do dia e o porquê, os dois placares, o preço dos últimos 90 dias e o botão **Atualizar agora** (faz o mesmo que o agendamento das 21h30) |
-| **Simular** | *E se eu tivesse comprado?* (valor, dia da compra e da venda: quanto teria virado e o pior momento no caminho); *E se eu comprar hoje?* (o que o passado diz para 1 a 12 meses: caso ruim, típico e bom); *E se eu seguisse os vereditos?* (carteira que compra no "bom" e vende no "ruim", contra comprar e esperar) |
-| **Guia** | Os 3 gráficos e o relatório do guia de risco |
-| **Diário** | Todos os vereditos e se acertaram |
+| **Preço** | Quanto vale 1 ETH e o gráfico do preço de cada dia, de 7 dias até tudo desde 2017, com o mais caro e o mais barato marcados |
+| **Palpite do dia** | O palpite (no projeto, o "veredito") para o próximo fechamento: subir, cair ou sem palpite. Explica em frases o que é um "dia parecido com hoje", mostra se a regra acerta e tem o botão **Buscar agora** (faz o mesmo que o agendamento das 21h30) |
+| **Simular** | *Se eu tivesse comprado* (quanto, quando comprou e quando vendeu: quanto teria hoje e o pior momento no caminho); *Se eu comprar hoje* (caso ruim, típico e bom em 1 a 12 meses, pelo que aconteceu no passado); *Se eu seguisse os palpites* (contra comprar e esquecer) |
+| **O que o estudo mostra** | As conclusões do guia e do gás, em frases com um número grande. Os gráficos detalhados ficam escondidos num "Ver o gráfico detalhado" |
+| **Histórico de palpites** | Cada palpite, o que aconteceu depois e se acertou |
+
+Toda tela tem um **"O que é isso?"** que abre ao clicar e explica o que está sendo mostrado. As
+datas se escolhem por mês e ano (ou por atalhos como "1 ano atrás"), sem calendário, e o
+resultado aparece sozinho ao mudar qualquer escolha.
 
 - **Como funciona:** a API em Python (`api/servidor.py`, FastAPI) faz todas as contas,
   reaproveitando as dos scripts `06` e `07`. A tela (`site/`, Vite, React e TypeScript, como
