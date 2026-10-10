@@ -91,6 +91,7 @@ chamada gás por transação) com dado público e gratuito, sem chave de API. Si
 |---|---|---|
 | CoinGecko | `https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=365` | preço, valor de mercado e volume diários do último ano. Limite: ~30 chamadas por minuto, 365 dias sem chave |
 | Nós públicos do Ethereum | `https://eth.drpc.org`, `https://eth.merkle.io` e `https://1rpc.io/eth` (JSON-RPC, por POST; o script tenta um depois do outro) | `eth_blockNumber`, `eth_getBlockByNumber`, `eth_feeHistory` (a taxa base de gás dos últimos blocos). O `ethereum-rpc.publicnode.com` saiu em 10/10/2026: sem chave, só entrega ~31 horas de história |
+| Binance | `https://api.binance.com/api/v3/klines?symbol=ETHUSDT&interval=1d` (reserva: `https://data-api.binance.vision`, mesmo formato) | fechamento diário do ETH em USDT (≈ dólar) desde 17/08/2017, 1.000 dias por pedido. Escolhida em 10/10/2026 para ter vários ciclos de alta e queda |
 
 ### As etapas, uma por script
 
@@ -103,6 +104,8 @@ de cada vez.
 | `src/02_analise_precos.py` | `dados/precos_eth.csv` | `saidas/precos.png` e `saidas/resumo_precos.txt` | retorno diário, volatilidade de 30 dias, maior queda a partir de um topo (drawdown), médias móveis de 7 e 30 dias |
 | `src/03_gas.py` | nó público (`eth_feeHistory`) | `dados/gas.csv` | taxa base de gás (em gwei) dos últimos ~7 dias de blocos (~50 mil blocos, de 1.024 em 1.024 por chamada) |
 | `src/04_analise_gas.py` | `dados/gas.csv` | `saidas/gas_por_hora.png` | o gás é mais barato em qual hora do dia e dia da semana? |
+| `src/05_historico_binance.py` | Binance | `dados/eth_diario_binance.csv` | preço diário desde 2017, só dias fechados |
+| `src/06_guia.py` | `dados/eth_diario_binance.csv` | `saidas/guia.txt` e `saidas/guia_1..3_*.png` | guia de risco: comprar num dia qualquer (e em dias parecidos com hoje), tudo de uma vez ou por mês, sinais de médias contra comprar e esperar |
 
 O `eth_feeHistory` não traz a hora de cada bloco. Não baixe os 50 mil blocos: pegue a hora do
 primeiro e do último com `eth_getBlockByNumber` e distribua entre eles (um bloco a cada ~12 s).
@@ -111,6 +114,11 @@ Diga no resumo que a hora é estimada.
 Ideias para depois, só se ele pedir: ETH contra BTC (correlação); gás contra preço (a rede fica
 mais cara quando o preço sobe?); um HTML simples juntando os gráficos; um teste automático no
 GitHub (Actions) como o do `extrator-eventos-corporativos`.
+
+**Próximo, já pedido (10/10/2026):** um veredito diário ("momento bom", "ruim" ou "sem
+vantagem" para o dia seguinte), com diário de acertos em `saidas/`, rodando sozinho às 21h30
+pelo Agendador de Tarefas do Windows. Regra congelada desde o primeiro dia, e placar histórico
+desde 2017 sem espiar o futuro. Vem depois do guia. O ETH contra BTC fica para depois dele.
 
 ### Como cada script deve ser
 
