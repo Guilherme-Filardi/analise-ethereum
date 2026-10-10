@@ -124,13 +124,14 @@ git push
 ## O site
 
 Dois cliques no **`abrir_site.bat`**. Ele abre uma janela só, como o `abrir_papel.bat` do
-PAPEL, e o navegador em `http://127.0.0.1:8010`. Para desligar, aperte **Q** na janela (ou
-feche a janela).
+PAPEL, e o navegador em `http://127.0.0.1:8010`. Se o Tailscale estiver instalado, ele também
+liga o **link da internet** e mostra na janela (já copiado, é só colar e mandar). Para
+desligar tudo, aperte **Q** na janela.
 
 | Tela | O que mostra |
 |---|---|
 | **Preço** | Quanto vale 1 ETH e o gráfico do preço de cada dia, de 7 dias até tudo desde 2017, com o mais caro e o mais barato marcados |
-| **Palpite do dia** | O palpite (no projeto, o "veredito") para o próximo fechamento: subir, cair ou sem palpite. Explica em frases o que é um "dia parecido com hoje", mostra se a regra acerta e tem o botão **Buscar agora** (faz o mesmo que o agendamento das 21h30) |
+| **Palpite do dia** | O palpite (no projeto, o "veredito") para o próximo fechamento: subir, cair ou sem palpite. Explica em frases o que é um "dia parecido com hoje", mostra se a regra acerta e tem o botão **Buscar agora** (faz o mesmo que o agendamento das 21h30; só aparece no próprio computador) |
 | **Simular** | *Se eu tivesse comprado* (quanto, quando comprou e quando vendeu: quanto teria hoje e o pior momento no caminho); *Se eu comprar hoje* (caso ruim, típico e bom em 1 a 12 meses, pelo que aconteceu no passado); *Se eu seguisse os palpites* (contra comprar e esquecer) |
 | **O que o estudo mostra** | As conclusões do guia e do gás, em frases com um número grande. Os gráficos detalhados ficam escondidos num "Ver o gráfico detalhado" |
 | **Histórico de palpites** | Cada palpite, o que aconteceu depois e se acertou |
@@ -143,7 +144,9 @@ resultado aparece sozinho ao mudar qualquer escolha.
   reaproveitando as dos scripts `06` e `07`. A tela (`site/`, Vite, React e TypeScript, como
   o PAPEL) só pede os números e desenha. A API também entrega a tela pronta, por isso basta
   uma porta.
-- **Só neste computador:** escuta em `127.0.0.1`, sem abrir para a rede.
+- **Quem pode abrir:** a API escuta só no próprio computador (`127.0.0.1`). Quem abre para a
+  internet é o Tailscale Funnel (abaixo). Sem senha, por decisão do Guilherme: o repositório
+  já é público. De fora, o botão "Buscar agora" não aparece, e a API recusa o pedido de baixar.
 - **Portas:** 8010 no dia a dia. Fogem das do PAPEL (5173, 4173 e 8000), então os dois podem
   ficar abertos juntos.
 - **Primeira vez:** o `abrir_site.bat` roda o `npm install` sozinho (uns minutos). Depois,
@@ -151,6 +154,37 @@ resultado aparece sozinho ao mudar qualquer escolha.
 - **Para mexer na tela** (desenvolvimento, duas janelas): numa, ligue a API com
   `"..\.venv\Scripts\python.exe" -m uvicorn api.servidor:app --port 8010`; na outra,
   `cd site` e `npm run dev`, e abra `http://localhost:5180`.
+
+### Abrir para a internet (Tailscale Funnel)
+
+Para outra pessoa abrir o site de qualquer lugar, pelo celular ou pelo computador, sem estar
+no seu Wi-Fi. O Tailscale cria um link fixo, com cadeado (https), e repassa as visitas para o
+seu computador. É grátis. A outra pessoa não instala nada: só abre o link.
+
+**Uma vez só, no seu computador:**
+
+1. Criar a conta em [tailscale.com](https://tailscale.com) (dá para entrar com a conta do Google).
+2. Instalar o Tailscale para Windows ([tailscale.com/download](https://tailscale.com/download))
+   e entrar com a mesma conta. Ele fica rodando perto do relógio.
+3. Ligar o Funnel (o link público) pela primeira vez:
+   ```
+   tailscale funnel 8010
+   ```
+   Na primeira vez, ele mostra um endereço para autorizar. Abra no navegador, autorize, volte
+   ao Prompt e aperte Ctrl + C.
+
+**Todo dia:** dois cliques no `abrir_site.bat`. A janela mostra:
+```
+  Link para mandar (ja copiado, e so colar):
+    https://nome-do-computador.algo.ts.net
+```
+Esse link é sempre o mesmo. Mande uma vez.
+
+- O site só abre pelo link enquanto o computador estiver ligado **e** a janela do
+  `abrir_site.bat` aberta. Aperte **Q** para desligar: o link para junto.
+- Se a janela for fechada no X, o link continua existindo, mas mostra erro até o
+  `abrir_site.bat` ser aberto de novo.
+- Sem o Tailscale instalado, o `abrir_site.bat` funciona igual, só no próprio computador.
 
 ---
 
@@ -240,6 +274,8 @@ preço que ainda não se conhecia naquele dia.
 | `Falta o fastapi ou o uvicorn` (no `abrir_site.bat`) | O Python do Lab ainda não tem o que o site usa | No `00 - Ambiente`: `instalar.bat fastapi` e `instalar.bat uvicorn` |
 | `A API nao respondeu em 60 s` | A API do site não ligou | Abrir o arquivo de registro que a janela mostra; o erro está no fim dele |
 | Site abre com "A API não respondeu" | A janela do `abrir_site.bat` foi fechada | Abrir o `abrir_site.bat` de novo |
+| `Nao consegui ligar o link da internet` | O Funnel ainda não foi autorizado, ou o Tailscale está desconectado | Fazer o passo 3 de "Abrir para a internet". Se pedir permissão de administrador, abrir o Prompt como administrador só para esse passo |
+| O link mostra erro para a outra pessoa | O `abrir_site.bat` não está aberto, ou o computador está desligado | Abrir o `abrir_site.bat` |
 
 ---
 
