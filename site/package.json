@@ -1,0 +1,24 @@
+{
+  "name": "analise-ethereum-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A tela da análise do Ethereum. Vite, React e TypeScript, como o PAPEL. As contas ficam na API em Python (api/servidor.py).",
+  "scripts": {
+    "dev": "vite",
+    "conferir": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "recharts": "3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "5.9.3",
+    "vite": "8.3.4"
+  }
+}

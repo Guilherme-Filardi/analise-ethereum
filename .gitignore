@@ -23,3 +23,7 @@ saidas/log_diario.txt
 # Os exemplos de entrada (dados/exemplo_*.json) continuam no Git.
 dados/exemplo_*.csv
 saidas/exemplo_*
+
+# O site: as bibliotecas do Node e a tela construída se refazem no abrir_site.bat
+site/node_modules/
+site/dist/
