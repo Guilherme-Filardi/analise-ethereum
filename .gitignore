@@ -1,0 +1,17 @@
+# Credenciais
+.env
+.env.*
+
+# Ambientes Python: o Lab usa uma .venv so, fora deste projeto
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Sistema e editores
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

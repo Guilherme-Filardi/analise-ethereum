@@ -1,0 +1,6 @@
+# Bibliotecas deste projeto, com a versao travada.
+# Na nuvem: pip install -r requirements.txt (sem criar .venv).
+# No computador do Guilherme: ja estao na .venv do Lab (C:\Lab\.venv).
+# Biblioteca nova entra la so por C:\Lab\00 - Ambiente\instalar.bat nome
+pandas==3.0.2
+matplotlib==3.10.9
