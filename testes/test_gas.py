@@ -60,6 +60,24 @@ def test_baixar_pega_todos_os_blocos_uma_vez_so():
     assert str(tabela["data_hora_utc_estimada"].iloc[0]) == "1970-01-01 08:20:12+00:00"
 
 
+def test_tenta_o_proximo_no_quando_um_falha():
+    tentados = []
+    original = gas.chamar
+
+    def chamar_de_mentira(url, metodo, params):
+        tentados.append(url)
+        if url == gas.NOS[0]:
+            raise RuntimeError("HTTP 403")
+        return "0x10"
+
+    gas.chamar = chamar_de_mentira
+    try:
+        assert gas.rpc_do_no("eth_blockNumber", []) == "0x10"
+    finally:
+        gas.chamar = original
+    assert tentados == gas.NOS[:2]
+
+
 if __name__ == "__main__":
     for nome, funcao in list(globals().items()):
         if nome.startswith("test_"):

@@ -1,6 +1,6 @@
 # Análise Ethereum: como trabalhar aqui
 
-Atualizado em 09/10/2026
+Atualizado em 10/10/2026
 
 Este arquivo é para o Claude Code, na nuvem (claude.ai/code, pelo aplicativo) ou no computador
 do Guilherme. Leia inteiro antes de responder.
@@ -90,7 +90,7 @@ chamada gás por transação) com dado público e gratuito, sem chave de API. Si
 | Fonte | Endereço | O que dá |
 |---|---|---|
 | CoinGecko | `https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=365` | preço, valor de mercado e volume diários do último ano. Limite: ~30 chamadas por minuto, 365 dias sem chave |
-| Nó público do Ethereum | `https://ethereum-rpc.publicnode.com` (JSON-RPC, por POST) | `eth_blockNumber`, `eth_getBlockByNumber`, `eth_feeHistory` (a taxa base de gás dos últimos blocos) |
+| Nós públicos do Ethereum | `https://eth.drpc.org`, `https://eth.merkle.io` e `https://1rpc.io/eth` (JSON-RPC, por POST; o script tenta um depois do outro) | `eth_blockNumber`, `eth_getBlockByNumber`, `eth_feeHistory` (a taxa base de gás dos últimos blocos). O `ethereum-rpc.publicnode.com` saiu em 10/10/2026: sem chave, só entrega ~31 horas de história |
 
 ### As etapas, uma por script
 
