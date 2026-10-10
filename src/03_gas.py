@@ -1,4 +1,4 @@
-"""Etapa 3: baixa do nó público do Ethereum a taxa base de gás dos últimos ~7 dias de blocos.
+"""Etapa 3: baixa de um nó público do Ethereum a taxa base de gás dos últimos ~7 dias de blocos.
 
 Grava dados/gas.csv com um bloco por linha: número, hora (estimada), taxa base em gwei e
 quanto do bloco foi ocupado.
@@ -8,7 +8,7 @@ blocos um a um seria lento demais. Então o script pega a hora real do primeiro 
 bloco e distribui os do meio por igual entre eles (sai perto de um bloco a cada 12 s).
 
 Uso:
-    python src/03_gas.py                                (baixa do nó público)
+    python src/03_gas.py                                (baixa dos nós públicos)
     python src/03_gas.py dados/exemplo_gas_rpc.json     (repete respostas gravadas, para teste)
 """
 
@@ -21,7 +21,14 @@ from pathlib import Path
 
 import pandas as pd
 
-URL = "https://ethereum-rpc.publicnode.com"
+# Nós públicos e gratuitos, sem chave. Testados em 10/10/2026: os três devolveram os mesmos
+# números para blocos de 7 dias atrás. Se um falhar, o script tenta o seguinte.
+# (O ethereum-rpc.publicnode.com saiu: só entrega ~31 horas sem chave pessoal.)
+NOS = [
+    "https://eth.drpc.org",
+    "https://eth.merkle.io",
+    "https://1rpc.io/eth",
+]
 # 7 dias x 7.200 blocos por dia (um bloco a cada 12 s).
 BLOCOS = 7 * 7_200
 # O eth_feeHistory devolve no máximo 1.024 blocos por chamada.
@@ -38,14 +45,33 @@ def br(numero, casas=0):
 
 
 def rpc_do_no(metodo, params):
-    """Faz uma chamada JSON-RPC (um POST com o nome do método) ao nó público."""
+    """Faz a chamada no primeiro nó da lista que responder."""
+    falhas = []
+    for url in NOS:
+        try:
+            return chamar(url, metodo, params)
+        except (urllib.error.URLError, TimeoutError, RuntimeError) as erro:
+            falhas.append(f"{url}: {erro}")
+    raise RuntimeError("todos os nós falharam. " + " | ".join(falhas))
+
+
+def chamar(url, metodo, params):
+    """Faz uma chamada JSON-RPC (um POST com o nome do método) a um nó."""
     corpo = json.dumps({"jsonrpc": "2.0", "id": 1, "method": metodo, "params": params}).encode()
+    # Nós atrás da Cloudflare barram o nome padrão do Python ("Python-urllib") com
+    # "error code: 1010". Os cabeçalhos abaixo são os mesmos que o curl manda e passa.
     pedido = urllib.request.Request(
-        URL, data=corpo,
-        headers={"Content-Type": "application/json", "User-Agent": "analise-ethereum"},
+        url, data=corpo,
+        headers={"Content-Type": "application/json", "Accept": "*/*",
+                 "User-Agent": "analise-ethereum"},
     )
-    with urllib.request.urlopen(pedido, timeout=30) as resposta:
-        resultado = json.load(resposta)
+    try:
+        with urllib.request.urlopen(pedido, timeout=30) as resposta:
+            resultado = json.load(resposta)
+    except urllib.error.HTTPError as erro:
+        # Mostra qual chamada falhou e o texto do servidor, que diz o motivo.
+        texto = erro.read(200).decode(errors="replace").strip()
+        raise RuntimeError(f"o nó recusou {metodo} com HTTP {erro.code}: {texto}") from erro
     if "error" in resultado:
         raise RuntimeError(f"o nó recusou {metodo}: {resultado['error']}")
     time.sleep(PAUSA)
@@ -130,7 +156,8 @@ def main():
         tabela = baixar(rpc, blocos)
     except (urllib.error.URLError, TimeoutError, RuntimeError) as erro:
         # Sem dado completo, para aqui: não grava nada e não mexe no CSV que já existir.
-        sys.exit(f"Falhou o download do nó público ({erro}). Nada foi gravado.")
+        print()  # pula a linha do contador, para a mensagem não ficar por cima dela
+        sys.exit(f"Falhou o download ({erro}). Nada foi gravado.")
 
     saida.parent.mkdir(exist_ok=True)
     tabela.to_csv(saida, index=False)
