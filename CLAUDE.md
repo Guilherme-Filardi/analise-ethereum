@@ -106,6 +106,7 @@ de cada vez.
 | `src/04_analise_gas.py` | `dados/gas.csv` | `saidas/gas_por_hora.png` | o gás é mais barato em qual hora do dia e dia da semana? |
 | `src/05_historico_binance.py` | Binance | `dados/eth_diario_binance.csv` | preço diário desde 2017, só dias fechados |
 | `src/06_guia.py` | `dados/eth_diario_binance.csv` | `saidas/guia.txt` e `saidas/guia_1..3_*.png` | guia de risco: comprar num dia qualquer (e em dias parecidos com hoje), tudo de uma vez ou por mês, sinais de médias contra comprar e esperar |
+| `src/07_veredito.py` | `dados/eth_diario_binance.csv` | `saidas/veredito_hoje.txt` e `saidas/diario_veredictos.csv` | veredito diário para o dia seguinte (bom, ruim ou sem vantagem), conferido no dia seguinte, com placar ao vivo e histórico. Regra congelada (versão 1). Roda sozinho pelo `rodar_diario.bat` às 21h30 |
 
 O `eth_feeHistory` não traz a hora de cada bloco. Não baixe os 50 mil blocos: pegue a hora do
 primeiro e do último com `eth_getBlockByNumber` e distribua entre eles (um bloco a cada ~12 s).
@@ -115,10 +116,13 @@ Ideias para depois, só se ele pedir: ETH contra BTC (correlação); gás contra
 mais cara quando o preço sobe?); um HTML simples juntando os gráficos; um teste automático no
 GitHub (Actions) como o do `extrator-eventos-corporativos`.
 
-**Próximo, já pedido (10/10/2026):** um veredito diário ("momento bom", "ruim" ou "sem
-vantagem" para o dia seguinte), com diário de acertos em `saidas/`, rodando sozinho às 21h30
-pelo Agendador de Tarefas do Windows. Regra congelada desde o primeiro dia, e placar histórico
-desde 2017 sem espiar o futuro. Vem depois do guia. O ETH contra BTC fica para depois dele.
+🔴 **A regra do veredito (`src/07_veredito.py`) está congelada desde 10/10/2026.** Não mude os
+números dela por conta própria, nem para "melhorar" o placar: isso é decorar a prova. Mudança só
+com pedido dele, como versão nova, e o diário separa as versões.
+
+**Ideias mapeadas, ainda não pedidas para fazer:** simular uma compra e ver quanto ganharia ou
+perderia; um site simples em React, rodando no computador dele, como interface. O ETH contra
+BTC ficou guardado para depois.
 
 ### Como cada script deve ser
 

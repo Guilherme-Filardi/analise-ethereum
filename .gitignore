@@ -15,3 +15,6 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Registro das rodadas automáticas (cresce todo dia; fica só no computador)
+saidas/log_diario.txt

@@ -1,0 +1,20 @@
+*** EXEMPLO: DADO FICTÍCIO, SÓ PARA TESTAR O SCRIPT ***
+
+VEREDITO PARA O DIA SEGUINTE A 09/10/2026
+(o dia da Binance de 10/10, que fecha às 21h em Brasília)
+
+  >>> SEM VANTAGEM <<<
+
+Fechamento de 09/10/2026: US$ 3.326,05
+Hoje o mercado está assim:
+  - tendência: alta (média de 7 dias acima ou abaixo da de 30)
+  - distância do recorde: 10 a 30%
+  - última semana: caiu
+No passado houve 95 dias assim; o dia seguinte subiu em 53,7% deles.
+Regra: 'bom' com 55,0% ou mais; 'ruim' com 45,0% ou menos; 'sem vantagem' entre os dois ou com menos de 30 dias parecidos.
+
+Placar ao vivo (diário): ainda sem dias com veredito conferido.
+Placar histórico (desde 30/03/2023): 196 acertos em 388 dias com veredito = 50,5%. Dizer 'sobe' nesses mesmos dias acertaria 51,8%; chutar acertaria 50%.
+
+O placar histórico usa a mesma regra, dia a dia, só com o que se sabia em cada dia.
+A regra só presta se ganhar de dizer 'sobe' todo dia. Não é recomendação de compra.
