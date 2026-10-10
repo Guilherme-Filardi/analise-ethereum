@@ -5,7 +5,9 @@ title Analise Ethereum - site
 
 REM Abre o site da analise numa janela so, como o abrir_papel.bat do PAPEL.
 REM A API (porta 8010) entrega a tela construida (site\dist) e as contas em /api.
-REM So neste computador (127.0.0.1), sem abrir para a rede.
+REM A API escuta so neste computador (127.0.0.1). Quem abre para a internet e o Tailscale Funnel:
+REM ele recebe as visitas no link publico e repassa para ca. Se o Tailscale nao estiver
+REM instalado, o site abre so neste computador. O passo a passo esta no README ("Abrir para a internet").
 REM Portas fora das do PAPEL (5173, 4173 e 8000): os dois podem ficar abertos juntos.
 REM A tela se reconstroi quando algum arquivo dela e mais novo que o site\dist\index.html.
 
@@ -85,6 +87,28 @@ start "" /b cmd /c ..\.venv\Scripts\python.exe -m uvicorn api.servidor:app --hos
 powershell -NoProfile -Command "function ok($u){ curl.exe -sf -o NUL --max-time 2 --noproxy '*' $u; $LASTEXITCODE -eq 0 }; $api=$false; $limite=(Get-Date).AddSeconds(60); while(-not $api -and (Get-Date) -lt $limite){ $api=ok 'http://127.0.0.1:8010/api/saude'; if(-not $api){ Start-Sleep -Milliseconds 300 } }; if(-not $api){ exit 2 }; Write-Host '  Site no ar: http://127.0.0.1:8010'; Start-Process 'http://127.0.0.1:8010'"
 if errorlevel 2 goto api_nao_subiu
 
+REM O link da internet (Tailscale Funnel), se o Tailscale estiver instalado.
+set "TS="
+where tailscale >nul 2>&1 && set "TS=tailscale"
+if not defined TS if exist "%ProgramFiles%\Tailscale\tailscale.exe" set "TS=%ProgramFiles%\Tailscale\tailscale.exe"
+if not defined TS (
+    echo.
+    echo   O Tailscale nao esta instalado: o site abre so neste computador.
+    echo   Para abrir pela internet, veja "Abrir para a internet" no README.
+    goto esperar
+)
+echo.
+echo   Ligando o link da internet ^(Tailscale Funnel^)...
+"%TS%" funnel --bg 8010
+if errorlevel 1 (
+    echo.
+    echo   Nao consegui ligar o link da internet. O site segue so neste computador.
+    echo   Primeira vez? Siga "Abrir para a internet" no README ^(passo 3^).
+    goto esperar
+)
+powershell -NoProfile -Command "$nome=(& $env:TS status --json | ConvertFrom-Json).Self.DNSName.TrimEnd('.'); $link='https://'+$nome; Set-Clipboard $link; Write-Host ''; Write-Host '  Link para mandar (ja copiado, e so colar):'; Write-Host ('    '+$link)"
+
+:esperar
 echo.
 echo   Deixe esta janela aberta enquanto usa o site.
 echo   Fechar esta janela desliga o site.
@@ -93,8 +117,9 @@ echo.
 powershell -NoProfile -Command "[Console]::TreatControlCAsInput=$true; do { $k=[Console]::ReadKey($true) } until ($k.Key -eq 'Q' -or ($k.Key -eq 'C' -and ($k.Modifiers -band 4)))"
 if errorlevel 1 pause >nul
 echo   Desligando...
+if defined TS "%TS%" funnel reset >nul 2>&1
 call :desligar
-echo   Site desligado. A porta 8010 esta livre.
+echo   Site desligado. O link da internet parou e a porta 8010 esta livre.
 ping -n 3 127.0.0.1 >nul
 exit /b 0
 

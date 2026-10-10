@@ -24,6 +24,7 @@ export type Hoje = {
   placar_vivo: Placar
   placar_historico: Placar
   historico_desde: string
+  pode_atualizar: boolean
   ultimos_90_dias: Ponto[]
 }
 

@@ -129,6 +129,11 @@ com pedido dele, como versão nova, e o diário separa as versões.
 | Abrir | `abrir_site.bat` | Uma janela só, no modelo do `abrir_papel.bat` do PAPEL: instala, reconstrói se mudou, liga a API (que entrega `site/dist`), abre o navegador; Q desliga |
 
 - As portas fogem das do PAPEL (5173, 4173 e 8000), que roda no mesmo computador.
+- **Internet:** pelo Tailscale Funnel, que o `abrir_site.bat` liga se o Tailscale estiver
+  instalado (e desliga no Q). A API continua em `127.0.0.1`; o Funnel repassa as visitas.
+  **Sem senha, por decisão dele (11/10/2026): o repositório já é público.** De fora, o botão
+  "Buscar agora" some e a API recusa `/api/atualizar` (`neste_computador`, em `api/servidor.py`).
+  O GitHub Pages foi considerado e descartado por ele (precisaria tirar as contas da API).
 - O PAPEL tem `.venv` própria; o site daqui usa a `.venv` do Lab (por isso `instalar.bat
   fastapi` e `instalar.bat uvicorn`).
 - O ETH contra BTC ficou guardado para depois.

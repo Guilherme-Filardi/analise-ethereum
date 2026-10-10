@@ -133,11 +133,20 @@ export function Hoje() {
         <section className="cartao" aria-labelledby="titulo-atualizar">
           <h2 id="titulo-atualizar">Buscar o preço mais novo</h2>
           <p className="secundario">
-            O computador já faz isso sozinho todo dia às 21h30. Use o botão se quiser agora (leva uns segundos).
+            O computador onde o site roda já faz isso sozinho todo dia às 21h30.
           </p>
-          <button className="acao" onClick={atualizar} disabled={atualizando}>
-            {atualizando ? 'Buscando...' : 'Buscar agora'}
-          </button>
+          {dado.pode_atualizar ? (
+            <>
+              <p className="secundario">Use o botão se quiser agora (leva uns segundos).</p>
+              <button className="acao" onClick={atualizar} disabled={atualizando}>
+                {atualizando ? 'Buscando...' : 'Buscar agora'}
+              </button>
+            </>
+          ) : (
+            <p className="secundario">
+              O botão de buscar agora só aparece nesse computador. Daqui, você vê sempre o último preço que ele buscou.
+            </p>
+          )}
           <div role="status" aria-live="polite">
             {resultado && (
               <>
