@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -37,6 +37,27 @@ def serie(valores):
     return [{"data": f"{d:%Y-%m-%d}", "valor": round(float(v), 2)} for d, v in valores.items()]
 
 
+# Cabeçalhos que túneis e proxies (Tailscale Funnel, Cloudflare...) acrescentam ao repassar uma
+# visita da internet. Se aparecer algum, a visita veio de fora, mesmo chegando por 127.0.0.1.
+CABECALHOS_DE_FORA = ("x-forwarded-for", "forwarded", "x-real-ip", "cf-connecting-ip",
+                      "tailscale-funnel-request")
+
+
+def neste_computador(pedido: Request) -> bool:
+    """A visita é do próprio computador (e não da internet, por um túnel)?
+
+    Confere três coisas: veio de 127.0.0.1, o endereço digitado foi 127.0.0.1 ou localhost
+    (pelo túnel, é o endereço público), e nenhum túnel deixou a sua marca nos cabeçalhos.
+    """
+    endereco = (pedido.headers.get("host") or "").rsplit(":", 1)[0].strip("[]")
+    return (
+        pedido.client is not None
+        and pedido.client.host in ("127.0.0.1", "::1")
+        and endereco in ("127.0.0.1", "localhost", "::1")
+        and not any(c in pedido.headers for c in CABECALHOS_DE_FORA)
+    )
+
+
 def precos():
     if not simulador.HISTORICO.exists():
         raise HTTPException(503, "Falta o histórico: rode o src\\05_historico_binance.py.")
@@ -49,7 +70,7 @@ def saude():
 
 
 @app.get("/api/hoje")
-def hoje():
+def hoje(pedido: Request):
     v = simulador.veredito
     p = precos()
     d = v.vereditos(v.caracteristicas(p))
@@ -84,6 +105,7 @@ def hoje():
         "placar_vivo": vivo,
         "placar_historico": historico,
         "historico_desde": f"{d.index[0]:%Y-%m-%d}",
+        "pode_atualizar": neste_computador(pedido),
         "ultimos_90_dias": serie(p.iloc[-90:]),
     }
 
@@ -199,8 +221,13 @@ def guia():
 
 
 @app.post("/api/atualizar")
-def atualizar():
-    """Roda o download da Binance (05) e o veredito (07), como o rodar_diario.bat."""
+def atualizar(pedido: Request):
+    """Roda o download da Binance (05) e o veredito (07), como o rodar_diario.bat.
+
+    Só para quem está no próprio computador: pela internet, ninguém pode mandar ele baixar nada.
+    """
+    if not neste_computador(pedido):
+        raise HTTPException(403, "A busca de preço só pode ser pedida no computador onde o site roda.")
     saida = []
     for script in ("05_historico_binance.py", "07_veredito.py"):
         rodada = subprocess.run(
