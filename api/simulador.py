@@ -29,12 +29,39 @@ def carregar(nome):
 
 guia = carregar("06_guia")
 veredito = carregar("07_veredito")
+analise_gas = carregar("04_analise_gas")
+GAS = PASTA / "dados" / "gas.csv"
 
 
 def ler_precos(caminho=HISTORICO):
     """Fechamento diário (em US$) indexado pela data."""
     tabela = pd.read_csv(caminho, parse_dates=["data"])
     return tabela.set_index("data")["fechamento"].astype(float)
+
+
+# Os períodos do gráfico de preço, em dias para trás a partir do último fechamento.
+PERIODOS = {"7d": 7, "1m": 30, "3m": 91, "1a": 365, "3a": 3 * 365, "tudo": None}
+
+
+def resumo_periodo(precos, periodo):
+    """O preço num período: a série e o que dá para dizer dela em uma frase.
+
+    Começo, fim, quanto variou, o maior e o menor preço do período.
+    """
+    dias = PERIODOS[periodo]
+    trecho = precos if dias is None else precos.loc[precos.index[-1] - pd.Timedelta(days=dias):]
+    return {
+        "serie": trecho,
+        "inicio": trecho.index[0],
+        "preco_inicio": trecho.iloc[0],
+        "fim": trecho.index[-1],
+        "preco_fim": trecho.iloc[-1],
+        "variacao": trecho.iloc[-1] / trecho.iloc[0] - 1,
+        "maior_dia": trecho.idxmax(),
+        "maior": trecho.max(),
+        "menor_dia": trecho.idxmin(),
+        "menor": trecho.min(),
+    }
 
 
 def comprar_e_vender(precos, valor, compra, venda, taxa=TAXA):
@@ -141,3 +168,64 @@ def seguir_vereditos(precos, valor, desde, taxa=TAXA):
         "maior_queda_esperando": guia.maior_queda(esperando),
         "comprado_amanha": bool(amanha),
     }
+
+
+def estudo(precos):
+    """As conclusões do estudo em números, para a tela "O que o estudo mostra".
+
+    Usa as mesmas contas do guia (etapa 6), do gás (etapa 4) e do veredito (etapa 7).
+    """
+    um_ano = guia.resumir(guia.a_frente(precos, 365))
+    ap = guia.aporte(precos)
+    carteiras, operacoes, _ = guia.comparar_sinais(precos)
+    primeira, segunda, meio = guia.por_metade(carteiras)
+    inicio_palpites = veredito.vereditos(veredito.caracteristicas(precos)).index[0]
+    palpites = seguir_vereditos(precos, 1000, inicio_palpites)
+    saida = {
+        "historico_inicio": precos.index[0],
+        "historico_fim": precos.index[-1],
+        "compra_1_ano": um_ano,
+        "aporte": {
+            "meses": len(ap),
+            "por_mes_ganhou": (ap["por_mes"] > ap["tudo_de_uma_vez"]).mean(),
+            "mediana_tudo": ap["tudo_de_uma_vez"].median(),
+            "mediana_por_mes": ap["por_mes"].median(),
+            "pior_tudo": ap["tudo_de_uma_vez"].min(),
+            "pior_por_mes": ap["por_mes"].min(),
+            "melhor_tudo": ap["tudo_de_uma_vez"].max(),
+            "melhor_por_mes": ap["por_mes"].max(),
+        },
+        "sinais": {
+            "inicio": carteiras.index[0],
+            "meio": meio,
+            "jeitos": [
+                {"nome": nome, "final": 1000 * carteiras[nome].iloc[-1],
+                 "pior_queda": guia.maior_queda(carteiras[nome]), "operacoes": operacoes[nome],
+                 "primeira_metade": primeira[nome], "segunda_metade": segunda[nome]}
+                for nome in carteiras.columns
+            ],
+        },
+        "palpites": {
+            "inicio": inicio_palpites,
+            "seguindo": palpites["seguindo"].iloc[-1],
+            "esperando": palpites["esperando"].iloc[-1],
+        },
+        "gas": None,
+    }
+    if GAS.exists():
+        tabela = analise_gas.hora_brasilia(pd.read_csv(GAS))
+        horas = analise_gas.por_hora(tabela)
+        dias = analise_gas.por_dia(tabela)
+        comercial = tabela["hora_brasilia"].dt.hour.between(9, 17)
+        saida["gas"] = {
+            "inicio": tabela["hora_brasilia"].iloc[0],
+            "fim": tabela["hora_brasilia"].iloc[-1],
+            "comercial": tabela.loc[comercial, "taxa_base_gwei"].median(),
+            "resto": tabela.loc[~comercial, "taxa_base_gwei"].median(),
+            "hora_mais_cara": int(horas.idxmax()),
+            "hora_mais_barata": int(horas.idxmin()),
+            "dia_mais_caro": dias.idxmax(),
+            "dia_mais_barato": dias.idxmin(),
+            "razao_dias": dias.max() / dias.min(),
+        }
+    return saida

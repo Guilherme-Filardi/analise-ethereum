@@ -62,9 +62,18 @@ def hoje():
         vivo = v.placar(conferidos["veredito"], conferidos["resultado"] == "subiu")
     historico = v.placar(d["veredito"].iloc[:-1], d["amanha_subiu"].iloc[:-1])
 
+    # Os mesmos 3 sinais da regra, em números que dá para escrever numa frase.
+    recorde_dia = p.loc[:d.index[-1]].idxmax()
     return {
         "dia": f"{d.index[-1]:%Y-%m-%d}",
         "preco": numero(ultimo["preco"]),
+        "media_7": numero(p.rolling(7).mean().iloc[-1]),
+        "media_30": numero(p.rolling(30).mean().iloc[-1]),
+        "recorde": numero(p.loc[recorde_dia]),
+        "recorde_dia": f"{recorde_dia:%Y-%m-%d}",
+        "abaixo_do_recorde": numero(1 - p.iloc[-1] / p.loc[recorde_dia]),
+        "preco_7_dias_antes": numero(p.iloc[-8]),
+        "variacao_semana": numero(p.iloc[-1] / p.iloc[-8] - 1),
         "veredito": ultimo["veredito"],
         "tendencia": "alta" if ultimo["tendencia_alta"] else "baixa",
         "distancia_do_recorde": v.DESCRICAO_FAIXA[int(ultimo["faixa_queda"])],
@@ -87,6 +96,25 @@ def diario():
     return tabela.iloc[::-1].to_dict(orient="records")  # o mais recente em cima
 
 
+@app.get("/api/precos")
+def precos_do_periodo(periodo: str = "1a"):
+    if periodo not in simulador.PERIODOS:
+        raise HTTPException(422, f"período desconhecido; use um destes: {', '.join(simulador.PERIODOS)}")
+    r = simulador.resumo_periodo(precos(), periodo)
+    return {
+        "serie": serie(r["serie"]),
+        "inicio": f"{r['inicio']:%Y-%m-%d}",
+        "preco_inicio": numero(r["preco_inicio"]),
+        "fim": f"{r['fim']:%Y-%m-%d}",
+        "preco_fim": numero(r["preco_fim"]),
+        "variacao": numero(r["variacao"]),
+        "maior_dia": f"{r['maior_dia']:%Y-%m-%d}",
+        "maior": numero(r["maior"]),
+        "menor_dia": f"{r['menor_dia']:%Y-%m-%d}",
+        "menor": numero(r["menor"]),
+    }
+
+
 @app.get("/api/limites")
 def limites():
     p = precos()
@@ -94,14 +122,19 @@ def limites():
 
 
 @app.get("/api/simular/compra")
-def simular_compra(valor: float, compra: str, venda: str):
+def simular_compra(valor: float, compra: str, venda: str = "hoje"):
+    p = precos()
+    # "hoje" = o último dia fechado (o dia de hoje só fecha às 21h em Brasília).
+    venda = f"{p.index[-1]:%Y-%m-%d}" if venda == "hoje" else venda
     try:
-        r = simulador.comprar_e_vender(precos(), valor, compra, venda)
+        r = simulador.comprar_e_vender(p, valor, compra, venda)
     except ValueError as erro:
         raise HTTPException(422, str(erro)) from erro
     return {
         "preco_compra": numero(r["preco_compra"]),
         "preco_venda": numero(r["preco_venda"]),
+        "dia_compra": f"{r['carteira'].index[0]:%Y-%m-%d}",
+        "dia_venda": f"{r['carteira'].index[-1]:%Y-%m-%d}",
         "valor_final": numero(r["valor_final"]),
         "retorno": numero(r["retorno"]),
         "pior_dia": f"{r['pior_dia']:%Y-%m-%d}",
@@ -137,6 +170,24 @@ def simular_vereditos(valor: float, desde: str):
         "maior_queda_esperando": numero(r["maior_queda_esperando"]),
         "comprado_amanha": r["comprado_amanha"],
     }
+
+
+def para_json(valor):
+    """Datas e números do pandas, dentro de dicionários e listas, viram texto e número comuns."""
+    if isinstance(valor, dict):
+        return {k: para_json(v) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [para_json(v) for v in valor]
+    if isinstance(valor, pd.Timestamp):
+        return f"{valor:%Y-%m-%d}"
+    if isinstance(valor, str) or valor is None:
+        return valor
+    return numero(valor)
+
+
+@app.get("/api/estudo")
+def estudo():
+    return para_json(simulador.estudo(precos()))
 
 
 @app.get("/api/guia")

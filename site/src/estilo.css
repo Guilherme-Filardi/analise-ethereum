@@ -135,3 +135,55 @@ td.num, th.num { text-align: right; }
 img.grafico { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--borda); background: #fcfcfb; }
 pre.relatorio { white-space: pre-wrap; font-size: 0.85rem; overflow-x: auto; }
 details summary { cursor: pointer; color: var(--texto-2); }
+
+/* ---------------------------------------------------------------- frases e explicações */
+.destaque { font-size: 2.4rem; font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+.frase { margin: 12px 0; max-width: 75ch; }
+.grande-frase { font-size: 1.15rem; }
+.lista { padding-left: 1.4em; max-width: 80ch; }
+.lista li { margin-bottom: 10px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.explica { margin-top: 16px; border-top: 1px dashed var(--borda); padding-top: 10px; }
+.explica summary { font-weight: 600; color: var(--serie-1); }
+.explica > div { max-width: 75ch; color: var(--texto-2); }
+.explica > div p { margin: 8px 0; }
+
+/* ---------------------------------------------------------------- escolhas */
+.escolhas { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.escolhas button {
+  font: inherit;
+  font-size: 0.95rem;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 1px solid var(--texto-3);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.escolhas button[aria-pressed="true"] { background: var(--serie-1); border-color: var(--serie-1); color: #fff; font-weight: 600; }
+
+.formulario { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-bottom: 8px; }
+fieldset.mes-ano { border: none; padding: 0; margin: 0; }
+fieldset.mes-ano legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
+fieldset.mes-ano label { display: inline-block; margin-right: 8px; }
+fieldset.mes-ano select, .campo-curto input {
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--texto-3);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+fieldset.mes-ano fieldset.mes-ano legend { font-weight: 400; color: var(--texto-2); font-size: 0.9rem; }
+.campo-curto { display: flex; align-items: center; gap: 8px; color: var(--texto-2); font-size: 0.95rem; }
+.campo-curto input { width: 130px; }
+
+/* ---------------------------------------------------------------- cenários de "comprar hoje" */
+.faixa { border-top: 1px solid var(--borda); padding-top: 4px; margin-top: 12px; }
+.faixa h3 { margin-bottom: 0; }
+
+/* ---------------------------------------------------------------- conclusões do estudo */
+.conclusao { display: grid; grid-template-columns: minmax(130px, 200px) 1fr; gap: 20px; align-items: start; }
+.numero-grande { font-size: 1.8rem; font-weight: 700; color: var(--serie-1); line-height: 1.2; }
+@media (max-width: 640px) { .conclusao { grid-template-columns: 1fr; } }

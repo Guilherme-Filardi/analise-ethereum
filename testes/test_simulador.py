@@ -65,6 +65,19 @@ def test_seguir_vereditos_nao_espia_o_futuro():
     pd.testing.assert_series_equal(curto, longo.loc[curto.index])
 
 
+def test_resumo_do_periodo():
+    # 10 dias de 100 a 109, com um pico de 150 no dia 5. Período de 7 dias: do dia 3 ao 10.
+    valores = [100.0 + i for i in range(10)]
+    valores[4] = 150.0
+    r = simulador.resumo_periodo(precos_diarios(valores), "7d")
+    assert str(r["inicio"].date()) == "2020-01-03"
+    assert r["preco_inicio"] == 102 and r["preco_fim"] == 109
+    assert abs(r["variacao"] - (109 / 102 - 1)) < 1e-12
+    assert r["maior"] == 150 and str(r["maior_dia"].date()) == "2020-01-05"
+    assert r["menor"] == 102
+    assert len(simulador.resumo_periodo(precos_diarios(valores), "tudo")["serie"]) == 10
+
+
 if __name__ == "__main__":
     for nome, funcao in list(globals().items()):
         if nome.startswith("test_"):
