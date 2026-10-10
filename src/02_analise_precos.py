@@ -51,10 +51,11 @@ def pct(valor, sinal=False):
 
 
 def um_por_dia(tabela):
-    """Fica com um preço por dia (o último daquele dia, em UTC).
+    """Fica com um preço por dia.
 
-    A CoinGecko manda um ponto à meia-noite de cada dia e, no fim, mais um ponto com o
-    preço da hora da chamada. Esse último cai no mesmo dia do anterior e o substitui.
+    A CoinGecko manda um ponto à meia-noite UTC de cada dia (21h do dia anterior em
+    Brasília) e, no fim, mais um ponto com o preço da hora da chamada. Esse último cai no
+    mesmo dia do anterior e o substitui.
     """
     tabela = tabela.copy()
     tabela["data"] = pd.to_datetime(tabela["data_hora_utc"], utc=True).dt.tz_localize(None).dt.normalize()
@@ -119,7 +120,11 @@ def resumo(d, exemplo):
         f"A média curta está {tendencia} da longa (acima costuma indicar alta recente).",
         "",
         "Observações:",
-        "- Um preço por dia: o último daquele dia em UTC (horário de Londres sem verão).",
+        "- Um preço por dia: o da meia-noite UTC, que é 21h do dia anterior em Brasília.",
+        "  No último dia, vale o preço da hora da consulta.",
+        "- Por isso, o retorno marcado num dia mede o que aconteceu no dia anterior",
+        f"  (a maior alta, marcada em {melhor:%d/%m}, aconteceu ao longo de"
+        f" {melhor - pd.Timedelta(days=1):%d/%m}, no horário UTC).",
         "- Volatilidade anualizada = desvio padrão do retorno diário em 30 dias x raiz de 365.",
     ]
     return "\n".join(linhas) + "\n"
@@ -164,7 +169,7 @@ def grafico(d, caminho, exemplo):
     if exemplo:
         titulo = "EXEMPLO (dado fictício)  " + titulo
     ax1.set_title(titulo, loc="left", fontsize=13, pad=12)
-    fig.text(0.01, 0.005, "Fonte: CoinGecko. Um preço por dia (o último do dia em UTC).",
+    fig.text(0.01, 0.005, "Fonte: CoinGecko. Um preço por dia: o da meia-noite UTC (21h do dia anterior em Brasília).",
              color=COR_TEXTO_2, fontsize=8)
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     fig.savefig(caminho, dpi=130, facecolor=COR_FUNDO)
