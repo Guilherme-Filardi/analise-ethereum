@@ -18,3 +18,12 @@ Thumbs.db
 
 # Registro das rodadas automáticas (cresce todo dia; fica só no computador)
 saidas/log_diario.txt
+
+# O que os scripts geram a partir dos exemplos inventados: se refaz rodando os exemplos.
+# Os exemplos de entrada (dados/exemplo_*.json) continuam no Git.
+dados/exemplo_*.csv
+saidas/exemplo_*
+
+# O site: as bibliotecas do Node e a tela construída se refazem no abrir_site.bat
+site/node_modules/
+site/dist/

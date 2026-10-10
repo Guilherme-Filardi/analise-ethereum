@@ -4,3 +4,6 @@
 # Biblioteca nova entra la so por C:\Lab\00 - Ambiente\instalar.bat nome
 pandas==3.0.2
 matplotlib==3.10.9
+# O site (api/servidor.py): a API e o programa que a deixa no ar
+fastapi==0.143.0
+uvicorn==0.53.0

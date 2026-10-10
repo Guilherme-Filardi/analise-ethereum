@@ -1,0 +1,137 @@
+/* Cores e medidas da tela. As cores dos gráficos seguem a mesma paleta dos PNGs da análise.
+   O modo escuro segue o do Windows (prefers-color-scheme). */
+:root {
+  color-scheme: light;
+  --fundo: #f4f4f2;
+  --superficie: #fcfcfb;
+  --borda: #e4e3df;
+  --texto: #0b0b0b;
+  --texto-2: #52514e;
+  --texto-3: #6f6e69;
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --grade: #e4e3df;
+  --bom: #0b7a3e;
+  --bom-fundo: #e3f4ea;
+  --ruim: #b42318;
+  --ruim-fundo: #fbe7e5;
+  --neutro: #52514e;
+  --neutro-fundo: #ecebe7;
+  --foco: #2a78d6;
+  --raio: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --fundo: #121211;
+    --superficie: #1a1a19;
+    --borda: #2e2e2c;
+    --texto: #f0efec;
+    --texto-2: #c3c2b7;
+    --texto-3: #9e9d95;
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --grade: #2e2e2c;
+    --bom: #5fd394;
+    --bom-fundo: #12301f;
+    --ruim: #ff8a80;
+    --ruim-fundo: #3a1714;
+    --neutro: #c3c2b7;
+    --neutro-fundo: #262624;
+    --foco: #7fb2f0;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.topo {
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+  padding: 16px 24px 0;
+}
+.topo h1 { margin: 0 0 4px; font-size: 1.4rem; }
+.topo p { margin: 0 0 12px; color: var(--texto-2); font-size: 0.9rem; }
+
+.abas { display: flex; gap: 4px; flex-wrap: wrap; }
+.abas button {
+  font: inherit;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 8px 14px;
+  color: var(--texto-2);
+  cursor: pointer;
+}
+.abas button[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--serie-1); font-weight: 600; }
+.abas.pequenas { margin-bottom: 16px; border-bottom: 1px solid var(--borda); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.cartao h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.cartao h3 { margin: 16px 0 8px; font-size: 1rem; }
+
+.grade-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 12px 0; }
+.numero { border: 1px solid var(--borda); border-radius: var(--raio); padding: 12px; }
+.numero .rotulo { color: var(--texto-2); font-size: 0.85rem; }
+.numero .valor { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.numero .nota { color: var(--texto-3); font-size: 0.8rem; }
+
+.veredito { border-radius: var(--raio); padding: 20px; text-align: center; }
+.veredito .grande { font-size: 2rem; font-weight: 700; margin: 4px 0; }
+.veredito.bom { background: var(--bom-fundo); color: var(--bom); }
+.veredito.ruim { background: var(--ruim-fundo); color: var(--ruim); }
+.veredito.neutro { background: var(--neutro-fundo); color: var(--neutro); }
+
+.positivo { color: var(--bom); }
+.negativo { color: var(--ruim); }
+.secundario { color: var(--texto-2); }
+.aviso { color: var(--texto-2); font-size: 0.85rem; }
+
+form.linha { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 8px; }
+label.campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; color: var(--texto-2); }
+label.campo input {
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--texto-3);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 160px;
+}
+button.acao {
+  font: inherit;
+  font-weight: 600;
+  background: var(--serie-1);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+button.acao:disabled { opacity: 0.6; cursor: progress; }
+.erro { color: var(--ruim); margin: 8px 0; }
+
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+th { color: var(--texto-2); font-weight: 600; font-size: 0.85rem; }
+td.num, th.num { text-align: right; }
+.rolagem { overflow-x: auto; }
+
+img.grafico { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--borda); background: #fcfcfb; }
+pre.relatorio { white-space: pre-wrap; font-size: 0.85rem; overflow-x: auto; }
+details summary { cursor: pointer; color: var(--texto-2); }
