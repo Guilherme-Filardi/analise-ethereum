@@ -1,0 +1,26 @@
+Resumo do preço do ETH (em dólar)
+Período: 365 dias, de 11/10/2025 a 10/10/2026
+
+Preço no início: US$ 3.841,67
+Preço no fim:    US$ 2.493,78
+Variação no período: -35,1%
+Maior preço: US$ 4.245,45 em 14/10/2025
+Menor preço: US$ 1.566,01 em 26/06/2026
+
+Maior alta em um dia:  +17,5% em 20/08/2026
+Maior baixa em um dia: -14,9% em 06/02/2026
+Dias de alta: 185 | dias de baixa: 179
+
+Volatilidade de 30 dias (anualizada), hoje: 45%
+Volatilidade de 30 dias, média do período: 60%
+
+Maior queda a partir de um topo: -63,1%
+  do topo em 14/10/2025 (US$ 4.245,45) ao fundo em 26/06/2026 (US$ 1.566,01)
+Hoje o preço está 41,3% abaixo do maior valor do período
+
+Média de 7 dias: US$ 2.622,88 | média de 30 dias: US$ 2.612,46
+A média curta está acima da longa (acima costuma indicar alta recente).
+
+Observações:
+- Um preço por dia: o último daquele dia em UTC (horário de Londres sem verão).
+- Volatilidade anualizada = desvio padrão do retorno diário em 30 dias x raiz de 365.
