@@ -40,12 +40,20 @@ def br(numero, casas=0):
 def rpc_do_no(metodo, params):
     """Faz uma chamada JSON-RPC (um POST com o nome do método) ao nó público."""
     corpo = json.dumps({"jsonrpc": "2.0", "id": 1, "method": metodo, "params": params}).encode()
+    # O nó fica atrás da Cloudflare, que barra o nome padrão do Python ("Python-urllib")
+    # com "error code: 1010". Os cabeçalhos abaixo são os mesmos que o curl manda e passa.
     pedido = urllib.request.Request(
         URL, data=corpo,
-        headers={"Content-Type": "application/json", "User-Agent": "analise-ethereum"},
+        headers={"Content-Type": "application/json", "Accept": "*/*",
+                 "User-Agent": "analise-ethereum"},
     )
-    with urllib.request.urlopen(pedido, timeout=30) as resposta:
-        resultado = json.load(resposta)
+    try:
+        with urllib.request.urlopen(pedido, timeout=30) as resposta:
+            resultado = json.load(resposta)
+    except urllib.error.HTTPError as erro:
+        # Mostra qual chamada falhou e o texto do servidor, que diz o motivo.
+        texto = erro.read(200).decode(errors="replace").strip()
+        raise RuntimeError(f"o nó recusou {metodo} com HTTP {erro.code}: {texto}") from erro
     if "error" in resultado:
         raise RuntimeError(f"o nó recusou {metodo}: {resultado['error']}")
     time.sleep(PAUSA)
@@ -130,6 +138,7 @@ def main():
         tabela = baixar(rpc, blocos)
     except (urllib.error.URLError, TimeoutError, RuntimeError) as erro:
         # Sem dado completo, para aqui: não grava nada e não mexe no CSV que já existir.
+        print()  # pula a linha do contador, para a mensagem não ficar por cima dela
         sys.exit(f"Falhou o download do nó público ({erro}). Nada foi gravado.")
 
     saida.parent.mkdir(exist_ok=True)
