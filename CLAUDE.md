@@ -120,9 +120,18 @@ GitHub (Actions) como o do `extrator-eventos-corporativos`.
 números dela por conta própria, nem para "melhorar" o placar: isso é decorar a prova. Mudança só
 com pedido dele, como versão nova, e o diário separa as versões.
 
-**Ideias mapeadas, ainda não pedidas para fazer:** simular uma compra e ver quanto ganharia ou
-perderia; um site simples em React, rodando no computador dele, como interface. O ETH contra
-BTC ficou guardado para depois.
+### O site (pedido em 10/10/2026)
+
+| Parte | Onde | Como |
+|---|---|---|
+| API | `api/servidor.py` (endereços) e `api/simulador.py` (contas) | FastAPI e uvicorn, porta **8010**, só em `127.0.0.1`. Reaproveita as funções do `06` e do `07`; conta nova ganha teste em `testes/test_simulador.py` |
+| Tela | `site/` | Vite 8, React 19 e TypeScript, como o PAPEL. Só pede e desenha; nenhuma conta na tela. `npm run dev` na porta 5180 (desenvolvimento) |
+| Abrir | `abrir_site.bat` | Uma janela só, no modelo do `abrir_papel.bat` do PAPEL: instala, reconstrói se mudou, liga a API (que entrega `site/dist`), abre o navegador; Q desliga |
+
+- As portas fogem das do PAPEL (5173, 4173 e 8000), que roda no mesmo computador.
+- O PAPEL tem `.venv` própria; o site daqui usa a `.venv` do Lab (por isso `instalar.bat
+  fastapi` e `instalar.bat uvicorn`).
+- O ETH contra BTC ficou guardado para depois.
 
 ### Como cada script deve ser
 

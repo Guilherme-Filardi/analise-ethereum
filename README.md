@@ -13,6 +13,7 @@ O plano das etapas e as regras de trabalho estão no [`CLAUDE.md`](CLAUDE.md).
 | Em qual hora e dia da semana o gás (a taxa da rede) é mais barato? | `03` busca, `04` analisa | [`saidas/gas_por_hora.png`](saidas/gas_por_hora.png) |
 | Qual o risco de comprar ETH, e qual o melhor jeito de comprar, desde 2017? | `05` busca, `06` analisa | [`saidas/guia.txt`](saidas/guia.txt) e 3 gráficos `saidas/guia_*.png` |
 | Amanhã é um bom momento? (veredito conferido no dia seguinte) | `05` busca, `07` decide | [`saidas/veredito_hoje.txt`](saidas/veredito_hoje.txt), [`saidas/diario_veredictos.csv`](saidas/diario_veredictos.csv) |
+| E se eu tivesse comprado, ou comprar hoje, ou seguir os vereditos? | o site (`abrir_site.bat`) | telas no navegador, em `http://127.0.0.1:8010` |
 
 ---
 
@@ -62,13 +63,16 @@ O plano das etapas e as regras de trabalho estão no [`CLAUDE.md`](CLAUDE.md).
 
 ## Montar o ambiente
 
-Precisa de **Python 3.11 ou mais novo** e de duas bibliotecas, travadas no
-[`requirements.txt`](requirements.txt): `pandas` (tabela e conta) e `matplotlib` (gráfico).
-O resto (baixar da internet, ler JSON) vem pronto no Python.
+Precisa de **Python 3.11 ou mais novo** e das bibliotecas travadas no
+[`requirements.txt`](requirements.txt): `pandas` (tabela e conta), `matplotlib` (gráfico),
+`fastapi` e `uvicorn` (só para o site). O resto vem pronto no Python. O site precisa também
+do **Node.js** ([nodejs.org](https://nodejs.org)); as bibliotecas dele se instalam sozinhas
+na primeira vez que o site abre.
 
 **No computador do Guilherme (`C:\Lab`).** O Lab tem um Python só para todos os projetos,
 em `C:\Lab\.venv\`, que já tem as duas bibliotecas. Não crie outro dentro desta pasta.
-Biblioteca nova entra só por `C:\Lab\00 - Ambiente\instalar.bat nome`.
+Biblioteca nova entra só por `C:\Lab\00 - Ambiente\instalar.bat nome`. Para o site, uma
+vez: `instalar.bat fastapi` e `instalar.bat uvicorn`.
 ```
 cd /d "C:\Lab"
 git clone https://github.com/Guilherme-Filardi/analise-ethereum "04 - Analise Ethereum"
@@ -117,6 +121,34 @@ git push
 
 ---
 
+## O site
+
+Dois cliques no **`abrir_site.bat`**. Ele abre uma janela só, como o `abrir_papel.bat` do
+PAPEL, e o navegador em `http://127.0.0.1:8010`. Para desligar, aperte **Q** na janela (ou
+feche a janela).
+
+| Tela | O que mostra |
+|---|---|
+| **Hoje** | O veredito do dia e o porquê, os dois placares, o preço dos últimos 90 dias e o botão **Atualizar agora** (faz o mesmo que o agendamento das 21h30) |
+| **Simular** | *E se eu tivesse comprado?* (valor, dia da compra e da venda: quanto teria virado e o pior momento no caminho); *E se eu comprar hoje?* (o que o passado diz para 1 a 12 meses: caso ruim, típico e bom); *E se eu seguisse os vereditos?* (carteira que compra no "bom" e vende no "ruim", contra comprar e esperar) |
+| **Guia** | Os 3 gráficos e o relatório do guia de risco |
+| **Diário** | Todos os vereditos e se acertaram |
+
+- **Como funciona:** a API em Python (`api/servidor.py`, FastAPI) faz todas as contas,
+  reaproveitando as dos scripts `06` e `07`. A tela (`site/`, Vite, React e TypeScript, como
+  o PAPEL) só pede os números e desenha. A API também entrega a tela pronta, por isso basta
+  uma porta.
+- **Só neste computador:** escuta em `127.0.0.1`, sem abrir para a rede.
+- **Portas:** 8010 no dia a dia. Fogem das do PAPEL (5173, 4173 e 8000), então os dois podem
+  ficar abertos juntos.
+- **Primeira vez:** o `abrir_site.bat` roda o `npm install` sozinho (uns minutos). Depois,
+  ele reconstrói a tela só quando algum arquivo dela muda.
+- **Para mexer na tela** (desenvolvimento, duas janelas): numa, ligue a API com
+  `"..\.venv\Scripts\python.exe" -m uvicorn api.servidor:app --port 8010`; na outra,
+  `cd site` e `npm run dev`, e abra `http://localhost:5180`.
+
+---
+
 ## Rodar tudo à mão
 
 O `01`, o `03` e o `05` precisam de internet; os outros, não.
@@ -153,7 +185,7 @@ cd /d "C:\Lab\04 - Analise Ethereum"
 
 ### Conferir as contas
 
-São 22 testes com números pequenos e conta feita à mão:
+São 27 testes com números pequenos e conta feita à mão:
 ```
 cd /d "C:\Lab\04 - Analise Ethereum"
 "..\.venv\Scripts\python.exe" -m pytest testes
@@ -185,8 +217,8 @@ estiver errada, o dado original continua intacto para refazer.
 | `06_guia.py` | Três perguntas com o preço real: comprar num dia qualquer (e em dias parecidos com hoje), tudo de uma vez ou por mês, e se os sinais de médias ganham de comprar e esperar (com taxa de 0,1% e teste em cada metade do período) |
 | `07_veredito.py` | Olha a tendência (média de 7 contra a de 30), a distância do recorde e a última semana; procura os dias parecidos no passado e vê quantos subiram no dia seguinte. **Bom** com 55% ou mais, **ruim** com 45% ou menos, **sem vantagem** no meio ou com menos de 30 dias parecidos. A regra é **congelada** (versão 1, de 10/10/2026) |
 
-Nos scripts `06` e `07`, um teste garante que nenhuma conta usa um preço que ainda não se
-conhecia naquele dia.
+Nos scripts `06` e `07` e no simulador do site, um teste garante que nenhuma conta usa um
+preço que ainda não se conhecia naquele dia.
 
 ---
 
@@ -200,6 +232,9 @@ conhecia naquele dia.
 | `Falhou o download (todos os endereços falharam ...)` | A Binance não respondeu nos dois endereços | Rodar mais tarde. Nada foi gravado |
 | `ATENÇÃO: o último dia do dado é ...` | O histórico está velho | Rodar o `05` e depois o `07` |
 | `No module named pandas` | O Python usado não tem as bibliotecas | No Lab, use `"..\.venv\Scripts\python.exe"`. Fora dele, `pip install -r requirements.txt` |
+| `Falta o fastapi ou o uvicorn` (no `abrir_site.bat`) | O Python do Lab ainda não tem o que o site usa | No `00 - Ambiente`: `instalar.bat fastapi` e `instalar.bat uvicorn` |
+| `A API nao respondeu em 60 s` | A API do site não ligou | Abrir o arquivo de registro que a janela mostra; o erro está no fim dele |
+| Site abre com "A API não respondeu" | A janela do `abrir_site.bat` foi fechada | Abrir o `abrir_site.bat` de novo |
 
 ---
 
@@ -211,7 +246,10 @@ conhecia naquele dia.
 | `dados/` | O dado bruto, do jeito que veio da fonte, e as respostas inventadas `exemplo_*.json` |
 | `saidas/` | Gráficos, relatórios e o diário. Nascem dos scripts; não edite à mão |
 | `testes/` | Os testes das contas |
+| `api/` | A API do site: `simulador.py` (as contas) e `servidor.py` (os endereços) |
+| `site/` | A tela do site (React). `node_modules` e `dist` se refazem e ficam fora do Git |
 | `rodar_diario.bat` | Roda o veredito do dia; é o que o Agendador do Windows chama |
+| `abrir_site.bat` | Abre o site numa janela só |
 
 Cada script acha as pastas a partir de onde ele mesmo está, então roda igual no Windows, no
 Linux e no Mac.
