@@ -1,0 +1,31 @@
+*** EXEMPLO: DADO FICTÍCIO, SÓ PARA TESTAR O SCRIPT ***
+
+Resumo do preço do ETH (em dólar)
+Período: 90 dias, de 13/07/2026 a 10/10/2026
+
+Preço no início: US$ 2.480,81
+Preço no fim:    US$ 2.314,91
+Variação no período: -6,7%
+Maior preço: US$ 2.527,34 em 18/07/2026
+Menor preço: US$ 1.808,36 em 20/08/2026
+
+Maior alta em um dia:  +7,3% em 27/09/2026
+Maior baixa em um dia: -7,6% em 19/08/2026
+Dias de alta: 48 | dias de baixa: 41
+
+Volatilidade de 30 dias (anualizada), hoje: 48%
+Volatilidade de 30 dias, média do período: 54%
+
+Maior queda a partir de um topo: -28,4%
+  do topo em 18/07/2026 (US$ 2.527,34) ao fundo em 20/08/2026 (US$ 1.808,36)
+Hoje o preço está 8,4% abaixo do maior valor do período
+
+Média de 7 dias: US$ 2.247,83 | média de 30 dias: US$ 2.054,59
+A média curta está acima da longa (acima costuma indicar alta recente).
+
+Observações:
+- Um preço por dia: o da meia-noite UTC, que é 21h do dia anterior em Brasília.
+  No último dia, vale o preço da hora da consulta.
+- Por isso, o retorno marcado num dia mede o que aconteceu no dia anterior
+  (a maior alta, marcada em 27/09, aconteceu ao longo de 26/09, no horário UTC).
+- Volatilidade anualizada = desvio padrão do retorno diário em 30 dias x raiz de 365.
