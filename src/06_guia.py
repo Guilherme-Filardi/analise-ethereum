@@ -23,6 +23,7 @@ import matplotlib
 
 matplotlib.use("Agg")  # só grava o arquivo; não abre janela (roda igual na nuvem e no Windows)
 import matplotlib.dates as mdates
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -389,16 +390,26 @@ def grafico_2(ap, caminho, exemplo):
 def grafico_3(carteiras, caminho, exemplo):
     fig, ax = plt.subplots(figsize=(11, 5))
     fig.patch.set_facecolor(COR_FUNDO)
+    finais = []
     for nome, cor in zip(carteiras.columns, (COR_1, COR_2, COR_3)):
         valores = VALOR * carteiras[nome]
         ax.plot(carteiras.index, valores, color=cor, lw=2, label=nome)
-        ax.annotate(moeda(valores.iloc[-1]), (carteiras.index[-1], valores.iloc[-1]),
-                    textcoords="offset points", xytext=(6, 0), va="center", fontsize=9)
+        finais.append(valores.iloc[-1])
+    # Valor final escrito na ponta de cada linha. Quando dois finais ficam perto (menos de
+    # 30% de diferença), o de baixo desce um pouco, para os textos não se encostarem.
+    anterior = None
+    for final in sorted(finais, reverse=True):
+        desce = -10 if anterior is not None and anterior / final < 1.3 else 0
+        ax.annotate(moeda(final), (carteiras.index[-1], final), textcoords="offset points",
+                    xytext=(6, desce), va="center", fontsize=9)
+        anterior = final
     # Escala que multiplica: a mesma distância vale "dobrou", seja de 100 para 200 ou de
     # 1.000 para 2.000. Sem ela, os primeiros anos ficariam achatados.
     ax.set_yscale("log")
+    # Marcas em 1, 2 e 5 de cada casa (100, 200, 500, 1.000...), sem amontoar.
+    ax.yaxis.set_major_locator(matplotlib.ticker.LogLocator(subs=(1, 2, 5)))
+    ax.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
     ax.yaxis.set_major_formatter(lambda v, _: inteiro(v))
-    ax.yaxis.set_minor_formatter(lambda v, _: inteiro(v))
     ax.set_ylabel("valor da carteira (US$, escala que multiplica)")
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%Y"))
     ax.legend(frameon=False, loc="upper left")
