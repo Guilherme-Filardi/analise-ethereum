@@ -9,11 +9,11 @@ const dolar = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximum
 const inteiro = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
 
 export function moeda(valor: number): string {
-  return `US$ ${dolar.format(valor)}`
+  return `US$ ${dolar.format(valor)}`
 }
 
 export function moedaCurta(valor: number): string {
-  return `US$ ${inteiro.format(valor)}`
+  return `US$ ${inteiro.format(valor)}`
 }
 
 export function pct(valor: number, sinal = false): string {
@@ -65,4 +65,25 @@ export function subiuCaiu(valor: number): string {
   if (valor > 0) return 'subiu'
   if (valor < 0) return 'caiu'
   return 'ficou igual'
+}
+
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/** "2021-01-01" vira "jan/21", para o eixo dos gráficos longos. */
+export function mesAnoCurto(iso: string): string {
+  const [ano, mes] = iso.split('-')
+  return `${MESES_CURTOS[Number(mes) - 1]}/${ano.slice(2)}`
+}
+
+/** Porcentagem sem casa decimal, para eixo: 0.123 vira "12%". */
+export function pctEixo(valor: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' }).format(valor)
+}
+
+/** Dólar compacto para eixo: 2500 vira "US$ 2,5 mil". */
+export function moedaEixo(valor: number): string {
+  if (Math.abs(valor) >= 1000) {
+    return `US$ ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(valor / 1000)} mil`
+  }
+  return `US$ ${inteiro.format(valor)}`
 }
