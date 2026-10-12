@@ -30,6 +30,7 @@ def carregar(nome):
 guia = carregar("06_guia")
 veredito = carregar("07_veredito")
 analise_gas = carregar("04_analise_gas")
+previsao = carregar("08_previsao")
 GAS = PASTA / "dados" / "gas.csv"
 
 
@@ -61,6 +62,64 @@ def resumo_periodo(precos, periodo):
         "maior": trecho.max(),
         "menor_dia": trecho.idxmin(),
         "menor": trecho.min(),
+    }
+
+
+def ler_dias(caminho=HISTORICO):
+    """Abertura, máxima, mínima e fechamento de cada dia (em US$), indexados pela data."""
+    tabela = pd.read_csv(caminho, parse_dates=["data"], usecols=["data", "abertura", "maxima", "minima", "fechamento"])
+    return tabela.set_index("data").astype(float)
+
+
+# Escala das velas: cada barra é um dia, uma semana (de segunda a domingo) ou um mês.
+ESCALAS = {"dia": None, "semana": "W-SUN", "mes": "ME"}
+
+
+def velas(dias, periodo, escala="dia"):
+    """Abertura, máxima, mínima e fechamento de cada dia, semana ou mês do período, com o
+    quanto subiu ou caiu contra o fechamento da vela anterior. E a contagem de altas e quedas,
+    a maior de cada uma e a mexida típica (a mediana do tamanho do movimento, para cima ou
+    para baixo).
+
+    A variação usa o fechamento anterior (e não a abertura), para bater com a linha do preço,
+    e é calculada antes de cortar o período: a primeira vela também tem a anterior. Semana ou
+    mês ainda não terminados entram, marcados com quantos dias já têm.
+    """
+    n = PERIODOS[periodo]
+    dias = dias.assign(anterior=dias["fechamento"].shift(1))
+    # "7 dias" são os 7 últimos dias (a linha do preço começa um dia antes, no ponto de partida).
+    trecho = dias if n is None else dias.loc[dias.index[-1] - pd.Timedelta(days=n - 1):]
+    regra = ESCALAS[escala]
+    if regra is None:
+        v = trecho.assign(dias=1, fim=trecho.index)
+    else:
+        grupos = trecho.groupby(pd.Grouper(freq=regra))
+        v = grupos.agg(abertura=("abertura", "first"), maxima=("maxima", "max"), minima=("minima", "min"),
+                       fechamento=("fechamento", "last"), # "first" do pandas pularia o vazio do primeiro dia da história; aqui vale o vazio
+                       anterior=("anterior", lambda s: s.iloc[0]),
+                       dias=("fechamento", "size"))
+        v = v[v["dias"] > 0]
+        # A vela leva a data do primeiro dia dela (e não a do fim da semana ou do mês).
+        v["fim"] = grupos.apply(lambda g: g.index[-1]).loc[v.index]
+        v.index = grupos.apply(lambda g: g.index[0]).loc[v.index]
+    v = v.assign(variacao=v["fechamento"] / v["anterior"] - 1).dropna(subset=["variacao"])
+    completa = {"dia": 1, "semana": 7, "mes": None}[escala]
+    ultimo_dia = dias.index[-1]
+    if escala == "mes":
+        aberta = v["fim"] == ultimo_dia
+        aberta &= (ultimo_dia + pd.Timedelta(days=1)).month == ultimo_dia.month
+    else:
+        aberta = v["dias"] < completa
+    va = v["variacao"]
+    return {
+        "velas": v.assign(aberta=aberta),
+        "subiu": int((va > 0).sum()),
+        "caiu": int((va < 0).sum()),
+        "maior_alta_dia": va.idxmax(),
+        "maior_alta": va.max(),
+        "maior_queda_dia": va.idxmin(),
+        "maior_queda": va.min(),
+        "mexida_tipica": va.abs().median(),
     }
 
 
