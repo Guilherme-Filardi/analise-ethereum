@@ -1,6 +1,6 @@
 # Análise Ethereum: como trabalhar aqui
 
-Atualizado em 10/10/2026
+Atualizado em 11/10/2026
 
 Este arquivo é para o Claude Code, na nuvem (claude.ai/code, pelo aplicativo) ou no computador
 do Guilherme. Leia inteiro antes de responder.
@@ -107,6 +107,7 @@ de cada vez.
 | `src/05_historico_binance.py` | Binance | `dados/eth_diario_binance.csv` | preço diário desde 2017, só dias fechados |
 | `src/06_guia.py` | `dados/eth_diario_binance.csv` | `saidas/guia.txt` e `saidas/guia_1..3_*.png` | guia de risco: comprar num dia qualquer (e em dias parecidos com hoje), tudo de uma vez ou por mês, sinais de médias contra comprar e esperar |
 | `src/07_veredito.py` | `dados/eth_diario_binance.csv` | `saidas/veredito_hoje.txt` e `saidas/diario_veredictos.csv` | veredito diário para o dia seguinte (bom, ruim ou sem vantagem), conferido no dia seguinte, com placar ao vivo e histórico. Regra congelada (versão 1). Roda sozinho pelo `rodar_diario.bat` às 21h30 |
+| `src/08_previsao.py` | `dados/eth_diario_binance.csv` | `saidas/previsao_hoje.txt` e `saidas/diario_previsao.csv` | previsão versão 2 (pedida em 11/10/2026): faixa de 80% para amanhã e 7 dias (volatilidade EWMA x quantis do passado) e chance de subir amanhã (regressão logística com 12 sinais, refeita a cada 30 dias), palpite todo dia. Congelada. Roda pelo `rodar_diario.bat`, depois do `07` |
 
 O `eth_feeHistory` não traz a hora de cada bloco. Não baixe os 50 mil blocos: pegue a hora do
 primeiro e do último com `eth_getBlockByNumber` e distribua entre eles (um bloco a cada ~12 s).
@@ -119,6 +120,13 @@ GitHub (Actions) como o do `extrator-eventos-corporativos`.
 🔴 **A regra do veredito (`src/07_veredito.py`) está congelada desde 10/10/2026.** Não mude os
 números dela por conta própria, nem para "melhorar" o placar: isso é decorar a prova. Mudança só
 com pedido dele, como versão nova, e o diário separa as versões.
+
+🔴 **A previsão versão 2 (`src/08_previsao.py`) está congelada desde 11/10/2026**, pelo mesmo
+motivo. Foi escolhida num estudo combinado antes de rodar: escolha olhando só 2017 a 2021, nota
+em 2022 a 2026 (os números estão no README). Melhorar a previsão é versão 3, com o mesmo método:
+os candidatos se comparam no treino, e a prova se olha uma vez só. A versão 1 continua rodando ao
+lado, para comparar. O scikit-learn foi testado (floresta e gradient boosting) e perdeu da
+regressão logística; está na `.venv` do Lab (pedido dele, 11/10/2026), mas o projeto não usa.
 
 ### O site (pedido em 10/10/2026)
 
@@ -137,6 +145,14 @@ com pedido dele, como versão nova, e o diário separa as versões.
 - O PAPEL tem `.venv` própria; o site daqui usa a `.venv` do Lab (por isso `instalar.bat
   fastapi` e `instalar.bat uvicorn`).
 - O ETH contra BTC ficou guardado para depois.
+- **Redesenho de 11/10/2026**, pedido dele: profissional, bom no celular e, acima de tudo,
+  **claro** (palavras dele: *"eu bater o olho e entender do que se trata"*, *"é o foco
+  principal"*). Telas: Painel (a primeira; em cima, três perguntas com a resposta grande),
+  Previsão, Simular, O que o estudo mostra e Histórico. Menu à esquerda no computador e barra
+  embaixo no celular; tema claro ou escuro. O visual mora nas variáveis do `site/src/estilo.css`;
+  os gráficos, no `site/src/Grafico.tsx` (linha, velas, sobe e desce, faixa contra o real); as
+  peças do painel, no `site/src/Pecas.tsx`. O gráfico do preço tem escala dia a dia, semana ou
+  mês (`/api/velas`). Conferir em 360 px de largura: nada pode rolar para o lado.
 
 ### Como cada script deve ser
 

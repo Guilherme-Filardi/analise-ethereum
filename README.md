@@ -13,7 +13,8 @@ O plano das etapas e as regras de trabalho estão no [`CLAUDE.md`](CLAUDE.md).
 | Em qual hora e dia da semana o gás (a taxa da rede) é mais barato? | `03` busca, `04` analisa | [`saidas/gas_por_hora.png`](saidas/gas_por_hora.png) |
 | Qual o risco de comprar ETH, e qual o melhor jeito de comprar, desde 2017? | `05` busca, `06` analisa | [`saidas/guia.txt`](saidas/guia.txt) e 3 gráficos `saidas/guia_*.png` |
 | Amanhã é um bom momento? (veredito conferido no dia seguinte) | `05` busca, `07` decide | [`saidas/veredito_hoje.txt`](saidas/veredito_hoje.txt), [`saidas/diario_veredictos.csv`](saidas/diario_veredictos.csv) |
-| E se eu tivesse comprado, ou comprar hoje, ou seguir os vereditos? | o site (`abrir_site.bat`) | telas no navegador, em `http://127.0.0.1:8010` |
+| Onde o preço deve fechar amanhã e em 7 dias? Sobe ou cai? (previsão versão 2, todo dia) | `05` busca, `08` prevê | [`saidas/previsao_hoje.txt`](saidas/previsao_hoje.txt), [`saidas/diario_previsao.csv`](saidas/diario_previsao.csv) |
+| Tudo isso num painel, mais simulações | o site (`abrir_site.bat`) | telas no navegador, em `http://127.0.0.1:8010` |
 
 ---
 
@@ -58,6 +59,43 @@ O plano das etapas e as regras de trabalho estão no [`CLAUDE.md`](CLAUDE.md).
 - Placar histórico da regra, de 2017 a 2026, sem espiar o futuro: **51,5%** de acerto em 660
   dias, contra 49,1% de quem dissesse "sobe" nesses mesmos dias. A diferença é do tamanho
   que a sorte explica. O diário ao vivo vai mostrar se ela se repete.
+- Ela fica **sem palpite em 85 de cada 100 dias** (no último ano): com centenas de dias
+  parecidos, a conta sempre volta para perto de 50%.
+
+### Previsão versão 2 (11/10/2026)
+
+Pedida para dar previsão todo dia. Duas partes: uma **faixa de preço** com 80% de chance
+(amanhã e daqui a 7 dias) e a **chance de subir amanhã**, com palpite todo dia.
+
+**Como foi escolhida, sem decorar a prova:** cada candidato foi testado dia a dia, só com o
+que se sabia em cada dia. A escolha olhou só **2017 a 2021** (o treino); a nota é de **2022 a
+2026** (a prova), anos que nenhum candidato viu ao ser escolhido.
+
+| Sobe ou cai amanhã (10 candidatos, os principais) | Acerto no treino | Acerto na prova |
+|---|---|---|
+| Dizer "sobe" todo dia (o mínimo a superar) | 52,0% | 50,3% |
+| Regra versão 1 (só nos dias em que arriscou) | 49,8% | 52,7% |
+| **Regressão logística, 12 sinais (a escolhida)** | 53,4% | **51,7%** |
+| Floresta aleatória (scikit-learn) | 54,7% | 51,3% |
+| Gradient boosting (scikit-learn) | 52,0% | 50,1% |
+| Vizinhos mais próximos, 12 sinais | 53,9% | 50,3% |
+
+Nenhum candidato prevê a direção de um dia de verdade: a margem de erro da prova é de ±2,4
+pontos. Os que mais brilharam no treino (até 55,8%) caíram para cara ou coroa na prova, e
+forçar a regra antiga a palpitar todo dia transformou US$ 1.000 em US$ 137 desde 2022. A
+escolhida ganhou pela nota de probabilidade no treino (a de Brier, que mede se "48%" quer
+dizer mesmo 48%), e é a mais simples. No teste inteiro (2019 a 2026), quando a chance ficou
+4 pontos ou mais longe de 50% (força "forte"), o palpite acertou 55,1% em 1.156 dias.
+
+| Faixa de 80% | Dentro no treino | Dentro na prova |
+|---|---|---|
+| Amanhã (volatilidade EWMA x quantis do passado, a escolhida) | 80,4% | **80,3%** |
+| 7 dias (o mesmo método) | 81,5% | **80,8%** |
+| Amanhã, quantis dos últimos 30 dias (a primeira ideia) | 74,6% | 75,0% |
+
+**O tamanho do movimento é previsível; a direção, não.** A faixa acerta o que promete porque
+dia agitado puxa dia agitado: nos dias de faixa estreita, o dia seguinte mexeu 2,5% em média;
+nos de faixa larga, 3,6%.
 
 ---
 
@@ -93,9 +131,9 @@ pip install -r requirements.txt
 
 ---
 
-## Uso do dia a dia: o veredito sozinho
+## Uso do dia a dia: o veredito e a previsão sozinhos
 
-O `rodar_diario.bat` atualiza o histórico (`05`) e dá o veredito (`07`). O dia da Binance
+O `rodar_diario.bat` atualiza o histórico (`05`), dá o veredito (`07`) e a previsão (`08`). O dia da Binance
 fecha às 21h em Brasília, então ele roda às 21h30. O que os scripts escrevem vai para
 `saidas\log_diario.txt`, que fica só no computador.
 
@@ -128,20 +166,29 @@ PAPEL, e o navegador em `http://127.0.0.1:8010`. Se o Tailscale estiver instalad
 liga o **link da internet** e mostra na janela (já copiado, é só colar e mandar). Para
 desligar tudo, aperte **Q** na janela.
 
+No computador, o menu fica à esquerda; no celular, numa barra embaixo, como num aplicativo.
+Tema claro ou escuro: segue o do aparelho, e o botão do menu troca (fica guardado no navegador).
+
 | Tela | O que mostra |
 |---|---|
-| **Preço** | Quanto vale 1 ETH e o gráfico do preço de cada dia, de 7 dias até tudo desde 2017, com o mais caro e o mais barato marcados |
-| **Palpite do dia** | O palpite (no projeto, o "veredito") para o próximo fechamento: subir, cair ou sem palpite. Explica em frases o que é um "dia parecido com hoje", mostra se a regra acerta e tem o botão **Buscar agora** (faz o mesmo que o agendamento das 21h30; só aparece no próprio computador) |
-| **Simular** | *Se eu tivesse comprado* (quanto, quando comprou e quando vendeu: quanto teria hoje e o pior momento no caminho); *Se eu comprar hoje* (caso ruim, típico e bom em 1 a 12 meses, pelo que aconteceu no passado); *Se eu seguisse os palpites* (contra comprar e esquecer) |
-| **O que o estudo mostra** | As conclusões do guia e do gás, em frases com um número grande. Os gráficos detalhados ficam escondidos num "Ver o gráfico detalhado" |
-| **Histórico de palpites** | Cada palpite, o que aconteceu depois e se acertou |
+| **Painel** (a primeira) | Em cima, três perguntas com a resposta grande: **quanto vale hoje**, **onde deve fechar amanhã** (a faixa de 80%) e **sobe ou cai** (uma barra dividida, "Sobe 49%" contra "Cai 51%"). Embaixo, o gráfico do preço, como o preço andou (7 dias, 30 dias, 1 ano, recorde), a faixa de 7 dias, a faixa prevista contra o preço que veio nos últimos 60 dias e o placar das previsões |
+| **Previsão** | A previsão por dentro: as duas faixas, a chance de subir e os sinais que mais pesaram hoje; a faixa contra o real em 180 dias; se a chance acerta o que promete (calibração); o acerto pela força do palpite; ano a ano; e a regra antiga (versão 1) ao lado. Tem o botão **Buscar preço agora** (faz o mesmo que o agendamento das 21h30; só aparece no próprio computador) |
+| **Simular** | *Se eu tivesse comprado* (quanto, quando comprou e quando vendeu: quanto teria hoje e o pior momento no caminho); *Se eu comprar hoje* (caso ruim, típico e bom em 1 a 12 meses, pelo que aconteceu no passado); *Se eu seguisse os palpites* da regra antiga (contra comprar e esquecer) |
+| **O que o estudo mostra** | As conclusões do guia e do gás, em frases com um número grande. Os detalhes e os gráficos ficam num "Ver os detalhes" |
+| **Histórico** | Cada previsão anotada antes de acontecer e o que veio depois: a da versão 2 (faixa e palpite) e a da regra antiga, em abas |
 
-Toda tela tem um **"O que é isso?"** que abre ao clicar e explica o que está sendo mostrado. As
-datas se escolhem por mês e ano (ou por atalhos como "1 ano atrás"), sem calendário, e o
-resultado aparece sozinho ao mudar qualquer escolha.
+**O gráfico do preço** tem três jeitos de ver: **Linha** (o fechamento de cada dia),
+**Velas** (abertura, fechamento, mais alto e mais baixo) e **Sobe e desce** (uma barra por
+vez que subiu ou caiu). Nas velas e no sobe e desce, a **escala** escolhe o que é cada barra:
+**dia a dia**, semana ou mês. Ao passar o mouse (ou o dedo), aparecem os 4 preços e a variação.
+
+Toda explicação fica num **(i)** que abre ao clicar. As datas se escolhem por dia, mês e ano
+(ou por atalhos como "1 ano atrás"), sem calendário, e o resultado aparece sozinho ao mudar
+qualquer escolha.
 
 - **Como funciona:** a API em Python (`api/servidor.py`, FastAPI) faz todas as contas,
-  reaproveitando as dos scripts `06` e `07`. A tela (`site/`, Vite, React e TypeScript, como
+  reaproveitando as dos scripts `06`, `07` e `08` (a conta da previsão fica guardada até o
+  arquivo de preços mudar). A tela (`site/`, Vite, React e TypeScript, como
   o PAPEL) só pede os números e desenha. A API também entrega a tela pronta, por isso basta
   uma porta.
 - **Quem pode abrir:** a API escuta só no próprio computador (`127.0.0.1`). Quem abre para a
@@ -200,6 +247,7 @@ cd /d "C:\Lab\04 - Analise Ethereum"
 "..\.venv\Scripts\python.exe" src\05_historico_binance.py
 "..\.venv\Scripts\python.exe" src\06_guia.py
 "..\.venv\Scripts\python.exe" src\07_veredito.py
+"..\.venv\Scripts\python.exe" src\08_previsao.py
 ```
 Fora do Lab, troque `"..\.venv\Scripts\python.exe"` por `python` e `\` por `/`.
 
@@ -220,11 +268,12 @@ cd /d "C:\Lab\04 - Analise Ethereum"
 "..\.venv\Scripts\python.exe" src\05_historico_binance.py dados\exemplo_binance_rpc.json
 "..\.venv\Scripts\python.exe" src\06_guia.py dados\exemplo_eth_diario_binance.csv
 "..\.venv\Scripts\python.exe" src\07_veredito.py dados\exemplo_eth_diario_binance.csv
+"..\.venv\Scripts\python.exe" src\08_previsao.py dados\exemplo_eth_diario_binance.csv
 ```
 
 ### Conferir as contas
 
-São 27 testes com números pequenos e conta feita à mão:
+São 37 testes com números pequenos e conta feita à mão:
 ```
 cd /d "C:\Lab\04 - Analise Ethereum"
 "..\.venv\Scripts\python.exe" -m pytest testes
@@ -242,6 +291,7 @@ CoinGecko  ── 01 ──>  precos_eth.csv         ── 02 ──>  precos.p
 Nós do ETH ── 03 ──>  gas.csv                ── 04 ──>  gas_por_hora.png
 Binance    ── 05 ──>  eth_diario_binance.csv ── 06 ──>  guia.txt + guia_1..3.png
                                              ── 07 ──>  veredito_hoje.txt + diario_veredictos.csv
+                                             ── 08 ──>  previsao_hoje.txt + diario_previsao.csv
 ```
 Quem busca só guarda o dado do jeito que chegou; quem calcula não usa internet. Se uma conta
 estiver errada, o dado original continua intacto para refazer.
@@ -255,8 +305,9 @@ estiver errada, o dado original continua intacto para refazer.
 | `05_historico_binance.py` | Pede à Binance o fechamento diário do ETH/USDT desde 17/08/2017, 1.000 dias por pedido, com um endereço reserva. O dia ainda aberto fica de fora |
 | `06_guia.py` | Três perguntas com o preço real: comprar num dia qualquer (e em dias parecidos com hoje), tudo de uma vez ou por mês, e se os sinais de médias ganham de comprar e esperar (com taxa de 0,1% e teste em cada metade do período) |
 | `07_veredito.py` | Olha a tendência (média de 7 contra a de 30), a distância do recorde e a última semana; procura os dias parecidos no passado e vê quantos subiram no dia seguinte. **Bom** com 55% ou mais, **ruim** com 45% ou menos, **sem vantagem** no meio ou com menos de 30 dias parecidos. A regra é **congelada** (versão 1, de 10/10/2026) |
+| `08_previsao.py` | A previsão versão 2. **Faixa de 80%** para amanhã e para 7 dias: a volatilidade de hoje (EWMA de 0,94, uma média dos movimentos que pesa mais os dias recentes) vezes os quantis de 10% e 90% de todos os movimentos já terminados. **Chance de subir**: regressão logística com freio (L2 = 300) sobre 12 sinais, refeita a cada 30 dias só com o passado; palpite "sobe" acima de 50%, "cai" no resto, com força fraca, média ou forte pela distância até 50%. Congelada (versão 2, de 11/10/2026). Dado curto demais sai com aviso, sem gravar |
 
-Nos scripts `06` e `07` e no simulador do site, um teste garante que nenhuma conta usa um
+Nos scripts `06`, `07` e `08` e no simulador do site, um teste garante que nenhuma conta usa um
 preço que ainda não se conhecia naquele dia.
 
 ---
@@ -289,7 +340,7 @@ preço que ainda não se conhecia naquele dia.
 | `testes/` | Os testes das contas |
 | `api/` | A API do site: `simulador.py` (as contas) e `servidor.py` (os endereços) |
 | `site/` | A tela do site (React). `node_modules` e `dist` se refazem e ficam fora do Git |
-| `rodar_diario.bat` | Roda o veredito do dia; é o que o Agendador do Windows chama |
+| `rodar_diario.bat` | Roda o veredito e a previsão do dia; é o que o Agendador do Windows chama |
 | `abrir_site.bat` | Abre o site numa janela só |
 
 Cada script acha as pastas a partir de onde ele mesmo está, então roda igual no Windows, no
