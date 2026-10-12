@@ -38,7 +38,6 @@ export function Preco({ altura = 340 }: { altura?: number }) {
   const [periodo, setPeriodo] = useState<Periodo>('1a')
   const [tipo, setTipo] = useState<Tipo>('linha')
   const [escala, setEscala] = useState<Escala>('dia')
-  const info = PERIODOS.find((x) => x.id === periodo)!
 
   // Ao trocar de período, a escala volta para a que cabe nele (dia até 1 ano, semana em 3 anos,
   // mês desde 2017). Ela continua livre para mudar depois.
@@ -50,7 +49,13 @@ export function Preco({ altura = 340 }: { altura?: number }) {
   const linha = useDado<Precos>(tipo === 'linha' ? `/api/precos?periodo=${periodo}` : null)
   const velas = useDado<Velas>(tipo !== 'linha' ? `/api/velas?periodo=${periodo}&escala=${escala}` : null)
   const atual = tipo === 'linha' ? linha : velas
-  const [um, varios] = PALAVRA[escala]
+  // A frase e o eixo seguem o dado que está na tela: enquanto o novo período carrega (ou se ele
+  // der erro), o gráfico anterior continua, e a frase não pode dizer "3 meses" sobre o de 1 ano.
+  const pedido = new URLSearchParams((atual.de ?? '').split('?')[1] ?? '')
+  const periodoNaTela = (pedido.get('periodo') as Periodo | null) ?? periodo
+  const escalaNaTela = (pedido.get('escala') as Escala | null) ?? escala
+  const info = PERIODOS.find((x) => x.id === periodoNaTela)!
+  const [um, varios] = PALAVRA[escalaNaTela]
 
   return (
     <section className="cartao" aria-labelledby="titulo-grafico-preco">
@@ -104,8 +109,8 @@ export function Preco({ altura = 340 }: { altura?: number }) {
             Num {um} comum, mexeu {pct(velas.dado.mexida_tipica)}.
           </p>
           {tipo === 'velas'
-            ? <GraficoVelas velas={velas.dado.velas} escala={escala} altura={altura} />
-            : <GraficoVariacao velas={velas.dado.velas} escala={escala} altura={altura} />}
+            ? <GraficoVelas velas={velas.dado.velas} escala={escalaNaTela} altura={altura} />
+            : <GraficoVariacao velas={velas.dado.velas} escala={escalaNaTela} altura={altura} />}
           <p className="nota">
             Maior alta: <span className="positivo">{pct(velas.dado.maior_alta, true)}</span> em {data(velas.dado.maior_alta_dia)}.
             Maior queda: <span className="negativo">{pct(velas.dado.maior_queda, true)}</span> em {data(velas.dado.maior_queda_dia)}.

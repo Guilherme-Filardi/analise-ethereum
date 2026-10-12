@@ -23,5 +23,6 @@ export function useDado<T>(endereco: string | null) {
   }, [endereco, vez])
 
   const recarregar = useCallback(() => setVez((v) => v + 1), [])
-  return { dado, erro, recarregar, atualizando: endereco !== null && de !== endereco && !erro }
+  // `de` é o endereço que produziu o `dado` na tela (pode ser o anterior, enquanto o novo chega).
+  return { dado, de, erro, recarregar, atualizando: endereco !== null && de !== endereco && !erro }
 }

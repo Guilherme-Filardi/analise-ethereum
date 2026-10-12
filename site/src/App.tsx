@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Icone, type NomeIcone } from './Icones'
 import { Diario } from './telas/Diario'
+import { Estatistica } from './telas/Estatistica'
 import { Guia } from './telas/Guia'
 import { Hoje } from './telas/Hoje'
 import { Painel } from './telas/Painel'
 import { Simular } from './telas/Simular'
 
-export type Tela = 'painel' | 'previsao' | 'simular' | 'estudo' | 'historico'
+export type Tela = 'painel' | 'previsao' | 'estatistica' | 'simular' | 'estudo' | 'historico'
 
 const TELAS: { id: Tela; nome: string; curto: string; icone: NomeIcone }[] = [
   { id: 'painel', nome: 'Painel', curto: 'Painel', icone: 'painel' },
   { id: 'previsao', nome: 'Previsão', curto: 'Previsão', icone: 'previsao' },
+  { id: 'estatistica', nome: 'Estatística', curto: 'Estatística', icone: 'estatistica' },
   { id: 'simular', nome: 'Simular', curto: 'Simular', icone: 'simular' },
   { id: 'estudo', nome: 'O que o estudo mostra', curto: 'Estudo', icone: 'estudo' },
   { id: 'historico', nome: 'Histórico', curto: 'Histórico', icone: 'historico' },
@@ -22,7 +24,8 @@ const APELIDOS: Record<string, Tela> = { preco: 'painel', palpite: 'previsao' }
 // A tela aberta fica no endereço (#simular), para o "voltar" do navegador e o F5 funcionarem.
 function telaDoEndereco(): Tela {
   const pedida = window.location.hash.slice(1)
-  if (pedida in APELIDOS) return APELIDOS[pedida]
+  // hasOwn: com "in", #constructor ou #toString achariam coisas herdadas e a tela quebrava.
+  if (Object.hasOwn(APELIDOS, pedida)) return APELIDOS[pedida]
   return TELAS.some((t) => t.id === pedida) ? (pedida as Tela) : 'painel'
 }
 
@@ -123,6 +126,7 @@ export function App() {
         <div className="largura">
           {tela === 'painel' && <Painel />}
           {tela === 'previsao' && <Hoje />}
+          {tela === 'estatistica' && <Estatistica />}
           {tela === 'simular' && <Simular />}
           {tela === 'estudo' && <Guia />}
           {tela === 'historico' && <Diario />}

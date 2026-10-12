@@ -97,7 +97,7 @@ export type Painel = {
   mexida_tipica_30: number
   ultimos_30: Ponto[]
   previsao: PrevisaoHoje
-  placar_2: { teste: PlacarV2; teste_desde: string | null; vivo: PlacarV2 }
+  placar_2: { teste: PlacarV2; teste_desde: string | null; prova: PlacarV2; prova_desde: string; vivo: PlacarV2 }
   palpite_1: {
     veredito: 'momento bom' | 'momento ruim' | 'sem vantagem'
     chance_subir: number | null
@@ -118,10 +118,87 @@ export type Previsao = {
   regra: { versao: string; cobertura: number; lambda: number; passo: number; treino: number; l2: number }
   placar: PlacarV2
   teste_desde: string | null
+  placar_prova: PlacarV2
+  prova_desde: string
   calibracao: { de: number; ate: number; dias: number; prevista: number; subiu: number }[]
   por_forca: { forca: string; dias: number; acerto: number }[]
   por_ano: { ano: number; dias: number; acerto: number | null; sempre_sobe: number | null; faixa_1: number | null; faixa_7: number | null }[]
   faixa_contra_real: FaixaReal[]
+}
+
+// ------------------------------------------------------------- estatística (etapa 9)
+
+export type Intervalo = {
+  nome: string
+  acertos: number
+  dias: number
+  taxa: number
+  de: number
+  ate: number
+  referencia: number
+  p: number
+  dias_efetivos: number
+}
+
+export type ConferenciaVar = {
+  metodo: 'historico' | 'ewma'
+  nome: string
+  dias: number
+  rompimentos: number
+  taxa: number
+  kupiec_p: number
+  seguidos: number
+  independencia_p: number
+}
+
+export type Estatistica = {
+  periodo: { inicio: string; fim: string; dias: number }
+  distribuicao: {
+    media: number
+    desvio: number
+    assimetria: number
+    curtose_excesso: number
+    jarque_bera: { estatistica: number; p: number }
+    histograma: { de: number; ate: number; meio: number; dias: number; normal: number }[]
+    extremos: { limite: number; reais: number; normal: number }[]
+    pior_dia: { data: string; variacao: number }
+    melhor_dia: { data: string; variacao: number }
+  }
+  autocorrelacao: {
+    limite: number
+    direcao: { defasagem: number; valor: number }[]
+    tamanho: { defasagem: number; valor: number }[]
+    fora_direcao: number
+    fora_tamanho: number
+    ljung_box: { defasagens: number; direcao_p: number; tamanho_p: number }
+  }
+  dia_da_semana: {
+    treino: { de: string; ate: string }
+    prova: { de: string; ate: string }
+    dias: { dia: string; treino_media: number; treino_n: number; prova_media: number; prova_n: number }[]
+    pior_no_treino: string
+    prova_diferenca: number
+    prova_p: number
+  }
+  cone: {
+    inicio: string
+    preco: number
+    dias: number
+    simulacoes: number
+    bloco: number
+    pontos: { dia: number; data: string; p5: number; p25: number; p50: number; p75: number; p95: number }[]
+    chance_acima_hoje: number
+    chance_cair_metade: number
+    chance_dobrar: number
+    conferencia: { testes: number; dentro_90: number; abaixo_p5: number; acima_p95: number; desde: string; anos_abaixo: number[]; anos_acima: number[] }
+  }
+  var: {
+    nivel: number
+    hoje: { historico: { var: number; es: number }; ewma: { var: number; es: number } }
+    conferencia: ConferenciaVar[]
+    ultimos_365: { data: string; variacao: number; var_ewma: number; var_historico: number; rompeu_ewma: boolean; rompeu_historico: boolean }[]
+  }
+  intervalos: Intervalo[]
 }
 
 export type Limites = { primeiro: string; ultimo: string }
@@ -204,7 +281,8 @@ export type Atualizacao = { ok: boolean; saida: string }
 export async function pedir<T>(endereco: string, opcoes?: RequestInit): Promise<T> {
   let resposta: Response
   try {
-    resposta = await fetch(endereco, opcoes)
+    // "X-Pedido: site" diz à API que o pedido veio desta tela (outra página não consegue mandar).
+    resposta = await fetch(endereco, { ...opcoes, headers: { 'X-Pedido': 'site', ...opcoes?.headers } })
   } catch {
     throw new Error('A API não respondeu. Ela está ligada? Abra pelo abrir_site.bat.')
   }

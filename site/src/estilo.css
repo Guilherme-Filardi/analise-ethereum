@@ -593,3 +593,13 @@ pre.relatorio { white-space: pre-wrap; font-size: 0.8rem; overflow-x: auto; over
 /* Lista "rótulo ... valor": cada número numa linha, alinhado à direita. */
 .linha-numero { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--borda); font-size: 0.92rem; }
 .linha-numero .linha-valor { font-weight: 650; text-align: right; white-space: nowrap; }
+
+/* Tela Estatística: cartões empilhados e a régua da margem de erro. */
+.pilha { display: flex; flex-direction: column; gap: 16px; }
+.pilha > .cartao + .cartao { margin-top: 0; }
+.regua { position: relative; height: 22px; }
+.regua .trilho { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--grade); }
+.regua .margem { position: absolute; top: 6px; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--acento) 30%, transparent); }
+.regua .meta { position: absolute; top: 0; width: 2px; height: 22px; background: var(--texto); transform: translateX(-50%); }
+.regua .ponto { position: absolute; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--acento); border: 2px solid var(--superficie); transform: translateX(-50%); }
+.tabela-margens td { vertical-align: middle; }

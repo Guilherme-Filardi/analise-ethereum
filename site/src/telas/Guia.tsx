@@ -110,7 +110,7 @@ export function Guia() {
               numa corretora brasileira não paga essa taxa: ela só aparece ao mover o ETH para fora.
             </>}>
             Para mandar ETH de uma carteira para outra, paga-se uma taxa (o "gás"). Ela custou {vezesGas} vezes mais das
-            9h às 17h (Brasília) do que no resto do dia.
+            9h às 18h (Brasília) do que no resto do dia.
           </Conclusao>
         )}
 

@@ -84,6 +84,15 @@ function GraficoCalibracao({ grupos }: { grupos: Previsao['calibracao'] }) {
           <Bar dataKey="subiu" fill={c2} maxBarSize={22} radius={[4, 4, 0, 0]} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
+      <table className="sr">
+        <caption>Chance prevista e quantas vezes subiu</caption>
+        <thead><tr><th>Faixa de chance</th><th>Dias</th><th>Chance média prevista</th><th>Subiu de verdade</th></tr></thead>
+        <tbody>
+          {linhas.map((l) => (
+            <tr key={l.nome}><td>{l.nome}</td><td>{l.dias}</td><td>{pct(l.prevista)}</td><td>{pct(l.subiu)}</td></tr>
+          ))}
+        </tbody>
+      </table>
       <div className="legenda">
         <span><i className="caixa" style={{ background: c1 }} />chance que a previsão deu</span>
         <span><i className="caixa" style={{ background: c2 }} />quantas vezes subiu de verdade</span>
@@ -163,7 +172,8 @@ export function Hoje() {
   const amanha = somarDias(h.dia, 1)
   const fcr = p.faixa_contra_real
   const dentro = fcr.filter((f) => f.real >= f.min && f.real <= f.max).length
-  const placar = p.placar
+  const placar = p.placar_prova
+  const tudo = p.placar
 
   return (
     <>
@@ -230,7 +240,7 @@ export function Hoje() {
               <p className="valor-resposta">{fraseDoPalpite(h.palpite, h.forca)}</p>
               <ChanceDividida chance={h.chance_subir} />
               <p className="frase">
-                {placar?.taxa != null && <>No teste com o passado, o palpite acertou <strong>{pct(placar.taxa)}</strong> das
+                {placar?.taxa != null && <>Desde 2022, na prova, o palpite acertou <strong>{pct(placar.taxa)}</strong> das
                   vezes. Um chute acerta 50%.</>}
               </p>
             </>
@@ -283,7 +293,7 @@ export function Hoje() {
           <div className="cartao-cab">
             <div>
               <h2 id="titulo-forca" className="cartao-titulo">Acerto do sobe ou cai</h2>
-              {p.teste_desde && <p className="cartao-sub">teste com o passado, desde {data(p.teste_desde)}</p>}
+              <p className="cartao-sub">na prova: de {data(p.prova_desde)} em diante, anos que a regra não viu ao ser escolhida</p>
             </div>
           </div>
           {placar && placar.taxa !== null && (
@@ -307,7 +317,9 @@ export function Hoje() {
             </table>
           </div>
           <p className="nota" style={{ marginTop: 8 }}>
-            Força: a distância da chance até 50%. Fraca, menos de 2 pontos; média, de 2 a 4; forte, 4 ou mais.
+            Força: a distância da chance até 50%. Fraca, menos de 2 pontos; média, de 2 a 4; forte, 4 ou mais. A tabela
+            usa todo o teste{p.teste_desde && <> desde {data(p.teste_desde)}</>}
+            {tudo?.taxa != null && <> (acerto geral de {pct(tudo.taxa)})</>}, incluindo os anos em que a regra foi escolhida.
           </p>
         </section>
 

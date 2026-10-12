@@ -39,7 +39,8 @@ export function Painel() {
 
   const prev = p.previsao
   const amanha = somarDias(p.dia, 1)
-  const teste = p.placar_2.teste
+  // O placar da prova (2022 em diante): os anos que a regra não viu ao ser escolhida.
+  const teste = p.placar_2.prova
   const vivo = p.placar_2.vivo
   const recentes = p.faixa_recente
   const dentroRecentes = recentes.filter((f) => f.real >= f.min && f.real <= f.max).length
@@ -73,7 +74,7 @@ export function Painel() {
           <FaixaVisual min={prev.faixa1_min} max={prev.faixa1_max} hoje={prev.preco} />
           <p className="nota">
             Faixa com 80% de chance.
-            {teste?.faixa_1_dentro != null && <> No passado, o preço caiu dentro dela em{' '}
+            {teste?.faixa_1_dentro != null && <> Desde 2022, o preço caiu dentro dela em{' '}
               <strong>{deCada100(teste.faixa_1_dentro)}</strong> dias.</>}
           </p>
         </section>
@@ -85,7 +86,7 @@ export function Painel() {
               <p className="valor-resposta">{fraseDoPalpite(prev.palpite, prev.forca)}</p>
               <ChanceDividida chance={prev.chance_subir} />
               <p className="nota" style={{ marginTop: 8 }}>
-                {teste?.taxa != null && <>No passado, o palpite acertou <strong>{pct(teste.taxa)}</strong> das vezes. Um chute acerta 50%.</>}
+                {teste?.taxa != null && <>Desde 2022, o palpite acertou <strong>{pct(teste.taxa)}</strong> das vezes. Um chute acerta 50%.</>}
               </p>
             </>
           ) : <p className="frase">Sem previsão para hoje.</p>}
@@ -126,9 +127,9 @@ export function Painel() {
 
         <section className="cartao s4" aria-labelledby="titulo-placar">
           <h2 id="titulo-placar" className="cartao-titulo" style={{ marginBottom: 2 }}>As previsões acertam?</h2>
-          {p.placar_2.teste_desde && (
-            <p className="cartao-sub" style={{ marginBottom: 10 }}>teste com o passado, desde {data(p.placar_2.teste_desde)}</p>
-          )}
+          <p className="cartao-sub" style={{ marginBottom: 10 }}>
+            na prova: de {data(p.placar_2.prova_desde)} em diante, anos que a regra não viu ao ser escolhida
+          </p>
           {teste && (
             <>
               <Linha rotulo="Faixa de amanhã" nota="prometido: 80%"

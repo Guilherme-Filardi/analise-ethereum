@@ -6,7 +6,7 @@ import { EscolhaMes } from '../EscolhaMes'
 import { Escolhas } from '../Escolhas'
 import { Explica } from '../Explica'
 import { GraficoLinhas } from '../Grafico'
-import { corDoSinal, data, deCada100, moeda, moedaCurta, pct } from '../formato'
+import { corDoSinal, data, deCada100, moeda, moedaCurta, pct, somarDias } from '../formato'
 import { useDado } from '../usar'
 import './telas.css'
 
@@ -212,7 +212,7 @@ function ComprarHoje() {
             <Escolhas
               opcoes={[
                 { id: 'todos', nome: 'Todas as compras desde 2017' },
-                { id: 'parecidos', nome: 'Só dias parecidos com hoje' },
+                { id: 'parecidos', nome: 'Só dias com o preço igualmente longe do recorde' },
               ]}
               atual={grupo}
               mudar={setGrupo}
@@ -251,8 +251,9 @@ function ComprarHoje() {
             </ul>
             {grupo === 'parecidos' && (
               <p className="frase">
-                Os dias parecidos com hoje vêm de poucas grandes quedas (2018 e 2022), em {r.episodios_parecidos} trechos.
-                É pouco exemplo: trate como pista, não como regra.
+                Esses dias se concentram nas grandes quedas, como as de 2018 e 2022 ({r.episodios_parecidos} trechos de
+                dias seguidos). Dias vizinhos se parecem muito entre si: é menos exemplo do que parece. Trate como
+                pista, não como regra.
               </p>
             )}
           </section>
@@ -314,7 +315,7 @@ function SeguirPalpites({ limites }: { limites: Limites }) {
       <section className="cartao">
         <div className="formulario">
           <EscolhaValor valor={valor} mudar={setValor} />
-          <EscolhaMes rotulo="Começando em" valor={desde} mudar={setDesde} primeiro="2017-10-01" ultimo={limites.ultimo} />
+          <EscolhaMes rotulo="Começando em" valor={desde} mudar={setDesde} primeiro="2017-10-01" ultimo={somarDias(limites.ultimo, -1)} />
         </div>
         <Explica titulo="Como a conta é feita?">
           <p>
