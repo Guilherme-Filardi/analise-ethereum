@@ -1,2 +1,4 @@
 ﻿dia,preco,tendencia,distancia_do_recorde,semana,dias_parecidos,chance_subir,veredito,dia_conferido,preco_seguinte,resultado,acertou,versao_regra,anotado_em
-2026-10-09,2487.70,alta,30 a 50%,caiu,93,0.5054,sem vantagem,,,,,1 (10/10/2026),2026-10-10 03:11 UTC
+2026-10-09,2487.70,alta,30 a 50%,caiu,93,0.5054,sem vantagem,2026-10-10,2506.52,subiu,-,1 (10/10/2026),2026-10-10 03:11 UTC
+2026-10-10,2506.52,baixa,30 a 50%,caiu,259,0.5135,sem vantagem,2026-10-11,2536.94,subiu,-,1 (10/10/2026),2026-10-11 00:00 UTC
+2026-10-11,2536.94,baixa,30 a 50%,caiu,260,0.5154,sem vantagem,,,,,1 (10/10/2026),2026-10-12 00:24 UTC

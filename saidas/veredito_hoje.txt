@@ -1,16 +1,17 @@
-VEREDITO PARA O DIA SEGUINTE A 09/10/2026
-(o dia da Binance de 10/10, que fecha às 21h em Brasília)
+VEREDITO PARA O DIA SEGUINTE A 11/10/2026
+(o dia da Binance de 12/10, que fecha às 21h em Brasília)
 
   >>> SEM VANTAGEM <<<
 
-Fechamento de 09/10/2026: US$ 2.487,70
+Fechamento de 11/10/2026: US$ 2.536,94
 Hoje o mercado está assim:
-  - tendência: alta (média de 7 dias acima ou abaixo da de 30)
+  - tendência: baixa (média de 7 dias acima ou abaixo da de 30)
   - distância do recorde: 30 a 50%
   - última semana: caiu
-No passado houve 93 dias assim; o dia seguinte subiu em 50,5% deles.
+No passado houve 260 dias assim; o dia seguinte subiu em 51,5% deles.
 Regra: 'bom' com 55,0% ou mais; 'ruim' com 45,0% ou menos; 'sem vantagem' entre os dois ou com menos de 30 dias parecidos.
 
+Último conferido: 10/10 disse 'sem vantagem', e o dia seguinte subiu (acertou: -).
 Placar ao vivo (diário): ainda sem dias com veredito conferido.
 Placar histórico (desde 15/09/2017): 340 acertos em 660 dias com veredito = 51,5%. Dizer 'sobe' nesses mesmos dias acertaria 49,1%; chutar acertaria 50%.
 
