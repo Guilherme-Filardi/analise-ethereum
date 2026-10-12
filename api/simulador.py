@@ -10,6 +10,7 @@ Não é previsão nem recomendação: tudo é o que aconteceu no passado.
 """
 
 import importlib.util
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -123,6 +124,43 @@ def velas(dias, periodo, escala="dia"):
         "maior_queda_dia": va.idxmin(),
         "maior_queda": va.min(),
         "mexida_tipica": va.abs().median(),
+    }
+
+
+# O Brasil não tem horário de verão desde 2019: Brasília é sempre 3 horas atrás do UTC.
+BRASILIA = timezone(timedelta(hours=-3))
+QUINZE_MIN_MS = 15 * 60_000
+DIA_MS = 86_400_000
+
+
+def ao_vivo(velas_15min, agora_ms):
+    """O preço de agora e as últimas 24 horas, a partir das velas de 15 minutos da Binance.
+
+    A última vela ainda está aberta: o fechamento dela é o último negócio, o preço de agora.
+    O dia da Binance começa à meia-noite UTC (21h em Brasília); a abertura da vela desse
+    horário é o fechamento de ontem, de onde se conta o "desde as 21h".
+    """
+    def hora(ms):
+        return datetime.fromtimestamp(ms / 1000, BRASILIA).strftime("%Y-%m-%d %H:%M")
+
+    # Cada ponto fica no fim da sua vela; a última, ainda aberta, fica no "agora".
+    pontos = [(min(int(v[0]) + QUINZE_MIN_MS, agora_ms), float(v[4])) for v in velas_15min]
+    preco = pontos[-1][1]
+    inicio_dia = int(velas_15min[-1][0]) // DIA_MS * DIA_MS
+    abertura_dia = next((float(v[1]) for v in velas_15min if int(v[0]) == inicio_dia), None)
+    maior = max(pontos, key=lambda p: p[1])
+    menor = min(pontos, key=lambda p: p[1])
+    return {
+        "preco": preco,
+        "hora": hora(agora_ms),
+        "fechamento_ontem": abertura_dia,
+        "desde_21h": preco / abertura_dia - 1 if abertura_dia else None,
+        "inicio": hora(pontos[0][0]),
+        "preco_inicio": pontos[0][1],
+        "variacao": preco / pontos[0][1] - 1,
+        "maior": maior[1], "maior_hora": hora(maior[0]),
+        "menor": menor[1], "menor_hora": hora(menor[0]),
+        "pontos": [{"data": hora(ms), "valor": round(v, 2)} for ms, v in pontos],
     }
 
 

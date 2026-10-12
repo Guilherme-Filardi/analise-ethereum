@@ -30,6 +30,17 @@ export function deCada100(fracao: number): string {
   return `${Math.round(fracao * 100)} de cada 100`
 }
 
+/** "2026-10-12 14:15" vira "14:15". */
+export function hora(texto: string): string {
+  return texto.slice(11, 16)
+}
+
+/** "2026-10-12 14:15" vira "12/10, 14:15". */
+export function diaHora(texto: string): string {
+  const [ano, mes, dia] = texto.slice(0, 10).split('-')
+  return ano ? `${dia}/${mes}, ${hora(texto)}` : texto
+}
+
 /** "2026-10-09" vira "09/10/2026". */
 export function data(iso: string): string {
   const [ano, mes, dia] = iso.split('-')

@@ -66,15 +66,15 @@ export function FaixaVisual({ min, max, hoje, rotulos = true }: { min: number; m
   return (
     <div>
       <div className="faixa-visual" role="img"
-        aria-label={`Faixa de ${moeda(min)} a ${moeda(max)}; o preço de hoje é ${moeda(hoje)}`}>
+        aria-label={`Faixa de ${moeda(min)} a ${moeda(max)}; o último fechamento (21h) foi ${moeda(hoje)}`}>
         <div className="trilho" />
         <div className="banda" style={{ left: pos(min), width: `calc(${pos(max)} - ${pos(min)})` }} />
-        <div className="agora" style={{ left: pos(hoje) }} title={`hoje: ${moeda(hoje)}`} />
+        <div className="agora" style={{ left: pos(hoje) }} title={`último fechamento (21h): ${moeda(hoje)}`} />
       </div>
       {rotulos && (
         <div className="faixa-numeros num">
           <div><span>de</span>{moeda(min)}</div>
-          <div style={{ textAlign: 'center' }}><span>hoje</span>{moeda(hoje)}</div>
+          <div style={{ textAlign: 'center' }}><span>fechou às 21h</span>{moeda(hoje)}</div>
           <div style={{ textAlign: 'right' }}><span>até</span>{moeda(max)}</div>
         </div>
       )}

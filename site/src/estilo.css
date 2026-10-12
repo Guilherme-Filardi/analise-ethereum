@@ -367,7 +367,7 @@ img { max-width: 100%; height: auto; }
 .segmento button:disabled { opacity: 0.42; cursor: not-allowed; }
 @media (max-width: 719px) {
   .escolhas button { min-height: 40px; padding: 8px 14px; }
-  .segmento button { min-height: 38px; }
+  .segmento button { min-height: 38px; padding: 5px 8px; }
 }
 
 button.acao {

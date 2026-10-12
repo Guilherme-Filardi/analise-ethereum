@@ -209,9 +209,9 @@ Tema claro ou escuro: segue o do aparelho, e o botão do menu troca (fica guarda
 
 | Tela | O que mostra |
 |---|---|
-| **Painel** (a primeira) | Em cima, três perguntas com a resposta grande: **quanto vale hoje**, **onde deve fechar amanhã** (a faixa de 80%) e **sobe ou cai** (uma barra dividida, "Sobe 49%" contra "Cai 51%"). Embaixo, o gráfico do preço, como o preço andou (7 dias, 30 dias, 1 ano, recorde), a faixa de 7 dias, a faixa prevista contra o preço que veio nos últimos 60 dias e o placar das previsões |
+| **Painel** (a primeira) | Em cima, três perguntas com a resposta grande: **quanto vale agora** (ao vivo, da Binance, a cada minuto), **onde deve fechar amanhã** (a faixa de 80%) e **sobe ou cai** (uma barra dividida, "Sobe 49%" contra "Cai 51%"). Embaixo, o gráfico do preço (o período **24H** mostra o preço ao vivo de 15 em 15 minutos; os outros, os dias fechados), como o preço andou (7 dias, 30 dias, 1 ano, recorde), a faixa de 7 dias, a faixa prevista contra o preço que veio nos últimos 60 dias e o placar das previsões |
 | **Estatística** | Duas abas. *Fundamentos*: os placares com margem de erro, a memória do preço (direção contra tamanho), os dias extremos contra a curva normal e o dia da semana com treino e prova. *Risco e simulação*: a queda num dia ruim (VaR), com os dois jeitos conferidos, e o leque do próximo ano |
-| **Previsão** | A previsão por dentro: as duas faixas, a chance de subir e os sinais que mais pesaram hoje; a faixa contra o real em 180 dias; se a chance acerta o que promete (calibração); o acerto pela força do palpite; ano a ano; e a regra antiga (versão 1) ao lado. Tem o botão **Buscar preço agora** (faz o mesmo que o agendamento das 21h30; só aparece no próprio computador) |
+| **Previsão** | A previsão por dentro: as duas faixas, a chance de subir e os sinais que mais pesaram hoje; a faixa contra o real em 180 dias; se a chance acerta o que promete (calibração); o acerto pela força do palpite; ano a ano; e a regra antiga (versão 1) ao lado. Tem o botão **Atualizar a base** (faz o mesmo que o agendamento das 21h30: traz os dias fechados e refaz as previsões; só aparece no próprio computador). O preço de agora não depende dele |
 | **Simular** | *Se eu tivesse comprado* (quanto, quando comprou e quando vendeu: quanto teria hoje e o pior momento no caminho); *Se eu comprar hoje* (caso ruim, típico e bom em 1 a 12 meses, pelo que aconteceu no passado); *Se eu seguisse os palpites* da regra antiga (contra comprar e esquecer) |
 | **O que o estudo mostra** | As conclusões do guia e do gás, em frases com um número grande. Os detalhes e os gráficos ficam num "Ver os detalhes" |
 | **Histórico** | Cada previsão anotada antes de acontecer e o que veio depois: a da versão 2 (faixa e palpite) e a da regra antiga, em abas |
@@ -232,7 +232,7 @@ qualquer escolha.
   uma porta.
 - **Quem pode abrir:** a API escuta só no próprio computador (`127.0.0.1`). Quem abre para a
   internet é o Tailscale Funnel (abaixo). Sem senha, por decisão do Guilherme: o repositório
-  já é público. De fora, o botão "Buscar agora" não aparece, e a API recusa o pedido de baixar.
+  já é público. De fora, o botão "Atualizar a base" não aparece, e a API recusa o pedido de baixar.
   No próprio computador, ela só aceita esse pedido vindo da tela do site (outra página aberta no
   navegador não consegue mandar), e uma busca por vez. Endereço que não é da API sempre devolve
   a tela, sem virar caminho de arquivo; de `saidas/` saem só os gráficos PNG (o
@@ -317,7 +317,7 @@ cd /d "C:\Lab\04 - Analise Ethereum"
 
 ### Conferir as contas
 
-São 50 testes com números pequenos e conta feita à mão:
+São 51 testes com números pequenos e conta feita à mão:
 ```
 cd /d "C:\Lab\04 - Analise Ethereum"
 "..\.venv\Scripts\python.exe" -m pytest testes

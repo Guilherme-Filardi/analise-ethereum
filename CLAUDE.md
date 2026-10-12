@@ -1,6 +1,6 @@
 # Análise Ethereum: como trabalhar aqui
 
-Atualizado em 11/10/2026
+Atualizado em 12/10/2026
 
 Este arquivo é para o Claude Code, na nuvem (claude.ai/code, pelo aplicativo) ou no computador
 do Guilherme. Leia inteiro antes de responder.
@@ -144,7 +144,7 @@ p iria de 0,165, que é acaso, para 0,017). O painel, a previsão e a estatísti
 - **Internet:** pelo Tailscale Funnel, que o `abrir_site.bat` liga se o Tailscale estiver
   instalado (e desliga no Q). A API continua em `127.0.0.1`; o Funnel repassa as visitas.
   **Sem senha, por decisão dele (11/10/2026): o repositório já é público.** De fora, o botão
-  "Buscar agora" some e a API recusa `/api/atualizar` (`neste_computador`, em `api/servidor.py`).
+  "Atualizar a base" some e a API recusa `/api/atualizar` (`neste_computador`, em `api/servidor.py`).
   🔴 **Segurança (varredura de 11/10/2026):** nenhum endereço vira caminho de arquivo. No
   Windows, `//outro-computador/pasta` fazia o servidor abrir conexão com a rede (travava o site
   e podia mandar a senha do Windows para fora). A rota final devolve sempre o `index.html`, e
@@ -164,6 +164,12 @@ p iria de 0,165, que é acaso, para 0,017). O painel, a previsão e a estatísti
   os gráficos, no `site/src/Grafico.tsx` (linha, velas, sobe e desce, faixa contra o real); as
   peças do painel, no `site/src/Pecas.tsx`. O gráfico do preço tem escala dia a dia, semana ou
   mês (`/api/velas`). Conferir em 360 px de largura: nada pode rolar para o lado.
+- **Preço de agora (12/10/2026)**, pedido dele: o histórico só tem dias fechados (21h), e ele
+  queria ver o valor atual. O `/api/agora` busca na Binance as velas de 15 minutos das últimas
+  24 horas (conta em `ao_vivo`, no `api/simulador.py`) e guarda 30 s. Aparece no "Quanto vale
+  agora" do Painel e no período 24H do gráfico; a tela pede de novo a cada minuto. As previsões
+  continuam partindo do fechamento das 21h. O `index.html` vai com `Cache-Control: no-cache`:
+  sem isso, depois de reconstruir a tela, o navegador usava o antigo e a tela ficava em branco.
 
 ### Como cada script deve ser
 

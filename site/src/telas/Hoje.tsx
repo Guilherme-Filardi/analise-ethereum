@@ -184,7 +184,7 @@ export function Hoje() {
         </div>
         {v1.dado?.pode_atualizar && (
           <button className="acao" onClick={atualizar} disabled={atualizando}>
-            <Icone nome="atualizar" />{atualizando ? 'Buscando...' : 'Buscar preço agora'}
+            <Icone nome="atualizar" />{atualizando ? 'Atualizando...' : 'Atualizar a base'}
           </button>
         )}
       </header>
@@ -193,7 +193,9 @@ export function Hoje() {
         {resultado && (
           <div className={`status ${resultado.ok ? 'ok' : 'falha'}`} style={{ marginBottom: 16 }}>
             <div>
-              <strong>{resultado.ok ? 'Pronto: preço e previsões atualizados.' : 'Não deu certo.'}</strong>
+              <strong>{resultado.ok
+                ? 'Pronto: a base e as previsões estão em dia. A base guarda só dias fechados (às 21h); o preço de agora fica no Painel e no gráfico 24H.'
+                : 'Não deu certo.'}</strong>
               <details className="explica" open={!resultado.ok} style={{ borderTop: 'none', marginTop: 4, paddingTop: 0 }}>
                 <summary>Detalhe técnico</summary>
                 <pre className="relatorio">{resultado.saida}</pre>

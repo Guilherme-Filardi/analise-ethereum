@@ -4,13 +4,14 @@ import { cor } from '../cores'
 import { Escolhas } from '../Escolhas'
 import { Explica } from '../Explica'
 import { GraficoLinhas, GraficoVariacao, GraficoVelas } from '../Grafico'
-import { data, moeda, moedaCurta, pct, subiuCaiu } from '../formato'
-import { useDado } from '../usar'
+import { data, diaHora, hora, moeda, moedaCurta, pct, subiuCaiu } from '../formato'
+import { useAoVivo, useDado } from '../usar'
 
-type Periodo = '7d' | '1m' | '3m' | '1a' | '3a' | 'tudo'
+type Periodo = '24h' | '7d' | '1m' | '3m' | '1a' | '3a' | 'tudo'
 type Tipo = 'linha' | 'velas' | 'barras'
 
 const PERIODOS: { id: Periodo; nome: string; frase: string; escala: Escala }[] = [
+  { id: '24h', nome: '24H', frase: 'Nas últimas 24 horas', escala: 'dia' },
   { id: '7d', nome: '7D', frase: 'Em 7 dias', escala: 'dia' },
   { id: '1m', nome: '1M', frase: 'Em 1 mês', escala: 'dia' },
   { id: '3m', nome: '3M', frase: 'Em 3 meses', escala: 'dia' },
@@ -46,9 +47,12 @@ export function Preco({ altura = 340 }: { altura?: number }) {
     setEscala(PERIODOS.find((x) => x.id === p)!.escala)
   }
 
-  const linha = useDado<Precos>(tipo === 'linha' ? `/api/precos?periodo=${periodo}` : null)
-  const velas = useDado<Velas>(tipo !== 'linha' ? `/api/velas?periodo=${periodo}&escala=${escala}` : null)
-  const atual = tipo === 'linha' ? linha : velas
+  // 24H é o preço ao vivo, de 15 em 15 minutos (sempre em linha); os outros, os dias fechados.
+  const vivo24 = periodo === '24h'
+  const vivo = useAoVivo(vivo24)
+  const linha = useDado<Precos>(!vivo24 && tipo === 'linha' ? `/api/precos?periodo=${periodo}` : null)
+  const velas = useDado<Velas>(!vivo24 && tipo !== 'linha' ? `/api/velas?periodo=${periodo}&escala=${escala}` : null)
+  const atual = vivo24 ? vivo : tipo === 'linha' ? linha : velas
   // A frase e o eixo seguem o dado que está na tela: enquanto o novo período carrega (ou se ele
   // der erro), o gráfico anterior continua, e a frase não pode dizer "3 meses" sobre o de 1 ano.
   const pedido = new URLSearchParams((atual.de ?? '').split('?')[1] ?? '')
@@ -62,13 +66,15 @@ export function Preco({ altura = 340 }: { altura?: number }) {
       <div className="cartao-cab">
         <div>
           <h2 id="titulo-grafico-preco" className="cartao-titulo">Preço do ETH</h2>
-          <p className="cartao-sub">Fechamento de cada {tipo === 'linha' ? 'dia' : um}, em dólar</p>
+          <p className="cartao-sub">
+            {vivo24 ? 'Ao vivo: o preço de 15 em 15 minutos, em dólar' : `Fechamento de cada ${tipo === 'linha' ? 'dia' : um}, em dólar`}
+          </p>
         </div>
-        <Escolhas opcoes={TIPOS} atual={tipo} mudar={setTipo} rotulo="Tipo de gráfico" estilo="segmento" />
+        {!vivo24 && <Escolhas opcoes={TIPOS} atual={tipo} mudar={setTipo} rotulo="Tipo de gráfico" estilo="segmento" />}
       </div>
       <div className="controles">
         <Escolhas opcoes={PERIODOS} atual={periodo} mudar={mudarPeriodo} rotulo="Período" estilo="segmento" />
-        {tipo !== 'linha' && (
+        {!vivo24 && tipo !== 'linha' && (
           <Escolhas opcoes={ESCALAS} atual={escala} mudar={setEscala} rotulo="Escala: cada barra é um" estilo="segmento" />
         )}
       </div>
@@ -76,7 +82,36 @@ export function Preco({ altura = 340 }: { altura?: number }) {
       {atual.erro && <p className="erro" role="alert">{atual.erro}</p>}
       {!atual.dado && !atual.erro && <div className="carregando" style={{ height: altura }}>Carregando...</div>}
 
-      {tipo === 'linha' && linha.dado && (
+      {vivo24 && vivo.dado && (
+        <div className={vivo.atualizando ? 'grafico-caixa recarregando' : 'grafico-caixa'}>
+          <p className="frase" style={{ marginTop: 0 }}>
+            Agora ({hora(vivo.dado.hora)}): <strong>{moeda(vivo.dado.preco)}</strong>. Nas últimas 24 horas, o preço{' '}
+            <strong className={vivo.dado.variacao >= 0 ? 'positivo' : 'negativo'}>
+              {vivo.dado.variacao >= 0 ? '▲' : '▼'} {subiuCaiu(vivo.dado.variacao)} {pct(Math.abs(vivo.dado.variacao))}
+            </strong>
+            , de {moeda(vivo.dado.preco_inicio)} para {moeda(vivo.dado.preco)}.
+          </p>
+          <GraficoLinhas
+            area
+            comHora
+            series={[{ nome: 'Preço de 1 ETH', pontos: vivo.dado.pontos, cor: cor('--serie-1') }]}
+            marcas={[
+              { data: vivo.dado.maior_hora, valor: vivo.dado.maior, rotulo: `máx. ${moedaCurta(vivo.dado.maior)}` },
+              { data: vivo.dado.menor_hora, valor: vivo.dado.menor, rotulo: `mín. ${moedaCurta(vivo.dado.menor)}`, embaixo: true },
+            ]}
+            referencia={vivo.dado.fechamento_ontem !== null
+              ? { valor: vivo.dado.fechamento_ontem, rotulo: `fechamento das 21h: ${moedaCurta(vivo.dado.fechamento_ontem)}` }
+              : undefined}
+            altura={altura}
+          />
+          <p className="nota">
+            Mais caro: {moeda(vivo.dado.maior)} às {diaHora(vivo.dado.maior_hora)}. Mais barato: {moeda(vivo.dado.menor)} às{' '}
+            {diaHora(vivo.dado.menor_hora)}. Horário de Brasília; atualiza sozinho a cada minuto.
+          </p>
+        </div>
+      )}
+
+      {!vivo24 && tipo === 'linha' && linha.dado && (
         <div className={linha.atualizando ? 'grafico-caixa recarregando' : 'grafico-caixa'}>
           <p className="frase" style={{ marginTop: 0 }}>
             {info.frase}, o preço{' '}
@@ -101,7 +136,7 @@ export function Preco({ altura = 340 }: { altura?: number }) {
         </div>
       )}
 
-      {tipo !== 'linha' && velas.dado && (
+      {!vivo24 && tipo !== 'linha' && velas.dado && (
         <div className={velas.atualizando ? 'grafico-caixa recarregando' : 'grafico-caixa'}>
           <p className="frase" style={{ marginTop: 0 }}>
             {info.frase}: <strong>{velas.dado.velas.length} {velas.dado.velas.length === 1 ? um : varios}</strong>. Subiu em{' '}
@@ -120,6 +155,10 @@ export function Preco({ altura = 340 }: { altura?: number }) {
 
       <Explica titulo="Como ler este gráfico">
         <p>O "fim do dia" é às 21h em Brasília, quando a Binance (de onde vem o preço) fecha o dia.</p>
+        <p>
+          <strong>24H:</strong> o preço ao vivo, de 15 em 15 minutos, nas últimas 24 horas. A linha tracejada é o
+          fechamento das 21h, de onde as previsões partem. Os outros períodos mostram só dias já fechados.
+        </p>
         <p><strong>Linha:</strong> o preço de fechamento de cada dia. Passe o mouse ou o dedo para ver o valor.</p>
         <p>
           <strong>Velas:</strong> cada vela mostra onde o preço abriu e fechou (a parte grossa) e o mais alto e o mais

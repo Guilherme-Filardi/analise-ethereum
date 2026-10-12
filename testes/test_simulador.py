@@ -130,6 +130,24 @@ def test_velas_por_semana_e_mes():
     assert abs(m["variacao"].iloc[0] - (131 / 100 - 1)) < 1e-12
 
 
+def test_ao_vivo():
+    # Velas de 15 minutos de 23h00 a 00h45 UTC (20h00 a 21h45 em Brasília); a última está aberta.
+    inicio = int(pd.Timestamp("2026-10-11 23:00", tz="UTC").timestamp() * 1000)
+    q = simulador.QUINZE_MIN_MS
+    # [abertura_ms, abertura, máxima, mínima, fechamento], como a Binance manda (em texto).
+    fechamentos = [90, 95, 80, 99, 101, 110, 104, 120]
+    velas = [[inicio + i * q, str(f - 1), "0", "0", str(f)] for i, f in enumerate(fechamentos)]
+    velas[4][1] = "99"  # a vela da meia-noite UTC abre no fechamento de ontem
+    agora = inicio + 7 * q + 5 * 60_000  # 5 minutos dentro da última vela
+    r = simulador.ao_vivo(velas, agora)
+    assert r["preco"] == 120 and r["hora"] == "2026-10-11 21:50"
+    assert r["fechamento_ontem"] == 99 and abs(r["desde_21h"] - (120 / 99 - 1)) < 1e-12
+    assert r["pontos"][0] == {"data": "2026-10-11 20:15", "valor": 90}  # no fim da primeira vela
+    assert r["pontos"][-1]["data"] == "2026-10-11 21:50"  # a vela aberta fica no agora
+    assert r["menor"] == 80 and r["menor_hora"] == "2026-10-11 20:45"
+    assert abs(r["variacao"] - (120 / 90 - 1)) < 1e-12
+
+
 if __name__ == "__main__":
     for nome, funcao in list(globals().items()):
         if nome.startswith("test_"):

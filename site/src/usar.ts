@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { pedir } from './api'
+import { pedir, type AoVivo } from './api'
 
 /**
  * Pede um endereço e guarda a resposta, o erro e se está buscando. Quando o endereço muda
@@ -25,4 +25,16 @@ export function useDado<T>(endereco: string | null) {
   const recarregar = useCallback(() => setVez((v) => v + 1), [])
   // `de` é o endereço que produziu o `dado` na tela (pode ser o anterior, enquanto o novo chega).
   return { dado, de, erro, recarregar, atualizando: endereco !== null && de !== endereco && !erro }
+}
+
+/** O preço de agora, pedido de novo a cada minuto enquanto a tela estiver aberta. */
+export function useAoVivo(ligado = true) {
+  const r = useDado<AoVivo>(ligado ? '/api/agora' : null)
+  const { recarregar } = r
+  useEffect(() => {
+    if (!ligado) return
+    const relogio = setInterval(recarregar, 60_000)
+    return () => clearInterval(relogio)
+  }, [ligado, recarregar])
+  return r
 }

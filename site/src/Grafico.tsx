@@ -4,7 +4,7 @@ import {
 } from 'recharts'
 import type { Escala, FaixaReal, Ponto, Vela } from './api'
 import { cor } from './cores'
-import { data, dataCurta, mesAnoCurto, moeda, moedaEixo, pct, pctEixo, subiuCaiu } from './formato'
+import { data, dataCurta, diaHora, hora, mesAnoCurto, moeda, moedaCurta, moedaEixo, pct, pctEixo, subiuCaiu } from './formato'
 
 // Todos os gráficos seguem as mesmas regras: linha de 2 px, grade fina e discreta, eixos em
 // cinza, e a cor da série só na marca (o texto fica sempre na cor de texto). A caixinha do
@@ -42,13 +42,13 @@ function ladoDoRotulo(m: Marca, linhas: Record<string, number | string>[]): 'top
   return m.embaixo ? 'bottom' : 'top'
 }
 
-function DicaLinhas({ active, payload, label, series }: {
-  active?: boolean; payload?: { dataKey: string; value: number }[]; label?: string; series: Serie[]
+function DicaLinhas({ active, payload, label, series, comHora }: {
+  active?: boolean; payload?: { dataKey: string; value: number }[]; label?: string; series: Serie[]; comHora?: boolean
 }) {
   if (!active || !payload?.length) return null
   return (
     <div className="dica">
-      <div className="terciario">{data(String(label))}</div>
+      <div className="terciario">{comHora ? diaHora(String(label)) : data(String(label))}</div>
       {series.map((s) => {
         const p = payload.find((x) => x.dataKey === s.nome)
         if (!p) return null
@@ -69,12 +69,14 @@ function DicaLinhas({ active, payload, label, series }: {
  * `area` pinta um véu claro embaixo da linha (só com uma série). `referencia` desenha uma
  * linha tracejada (por exemplo, "o que você colocou"); `marcas` destaca pontos com um texto.
  */
-export function GraficoLinhas({ series, referencia, marcas = [], altura = 300, area = false }: {
+export function GraficoLinhas({ series, referencia, marcas = [], altura = 300, area = false, comHora = false }: {
   series: Serie[]
   referencia?: { valor: number; rotulo: string }
   marcas?: Marca[]
   altura?: number
   area?: boolean
+  /** As datas trazem a hora ("aaaa-mm-dd hh:mm"): o eixo mostra a hora, e a dica, o dia e a hora. */
+  comHora?: boolean
 }) {
   const porData = new Map<string, Record<string, number | string>>()
   for (const s of series) {
@@ -86,7 +88,10 @@ export function GraficoLinhas({ series, referencia, marcas = [], altura = 300, a
   }
   const linhas = [...porData.values()].sort((a, b) => String(a.data).localeCompare(String(b.data)))
   const corTexto = cor('--texto-3')
-  const fmt = formatoData(linhas as { data: string }[])
+  const fmt = comHora ? hora : formatoData(linhas as { data: string }[])
+  // Trecho curto (24 horas, 7 dias): "US$ 2,5 mil" se repetiria em todo o eixo; vai em dólar inteiro.
+  const valores = series.flatMap((s) => s.pontos.map((p) => p.valor))
+  const fmtValor = Math.max(...valores) - Math.min(...valores) < 1000 ? moedaCurta : moedaEixo
   const comArea = area && series.length === 1
 
   return (
@@ -103,9 +108,9 @@ export function GraficoLinhas({ series, referencia, marcas = [], altura = 300, a
           )}
           <CartesianGrid stroke={cor('--grade')} vertical={false} />
           <XAxis dataKey="data" tickFormatter={fmt} minTickGap={48} {...eixos(corTexto)} />
-          <YAxis tickFormatter={moedaEixo} width={78} {...eixos(corTexto)} axisLine={false}
+          <YAxis tickFormatter={fmtValor} width={78} {...eixos(corTexto)} axisLine={false}
             domain={['auto', 'auto']} padding={{ top: 20, bottom: 20 }} />
-          <Tooltip content={<DicaLinhas series={series} />} cursor={{ stroke: cor('--eixo'), strokeWidth: 1 }} />
+          <Tooltip content={<DicaLinhas series={series} comHora={comHora} />} cursor={{ stroke: cor('--eixo'), strokeWidth: 1 }} />
           {referencia && (
             <ReferenceLine y={referencia.valor} stroke={corTexto} strokeDasharray="4 4"
               label={{ value: referencia.rotulo, position: 'insideBottomRight', fill: corTexto, fontSize: 12 }} />

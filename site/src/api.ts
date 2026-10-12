@@ -201,6 +201,22 @@ export type Estatistica = {
   intervalos: Intervalo[]
 }
 
+/** O preço de agora (Binance, ao vivo) e as últimas 24 horas. Horas em Brasília, "aaaa-mm-dd hh:mm". */
+export type AoVivo = {
+  preco: number
+  hora: string
+  fechamento_ontem: number | null
+  desde_21h: number | null
+  inicio: string
+  preco_inicio: number
+  variacao: number
+  maior: number
+  maior_hora: string
+  menor: number
+  menor_hora: string
+  pontos: Ponto[]
+}
+
 export type Limites = { primeiro: string; ultimo: string }
 
 export type Precos = {

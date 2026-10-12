@@ -7,9 +7,13 @@ Ligar à mão, da pasta do projeto:
     "..\\.venv\\Scripts\\python.exe" -m uvicorn api.servidor:app --host 127.0.0.1 --port 8010
 """
 
+import json
 import subprocess
 import sys
 import threading
+import time
+import urllib.error
+import urllib.request
 from functools import lru_cache
 from pathlib import Path
 
@@ -328,6 +332,41 @@ def velas(periodo: str = "3m", escala: str = "dia"):
     }
 
 
+# ------------------------------------------------------------------ o preço de agora
+# O histórico só tem dias fechados (às 21h). O preço de agora vem direto da Binance, nas velas
+# de 15 minutos das últimas 24 horas, e fica guardado 30 s: muita gente abrindo o site ao mesmo
+# tempo (pelo link da internet) vira no máximo um pedido à Binance a cada 30 s.
+HISTORICO_BINANCE = simulador.carregar("05_historico_binance")
+AO_VIVO_SEGUNDOS = 30
+AO_VIVO = {"quando": 0.0, "dado": None}
+BUSCANDO_AO_VIVO = threading.Lock()
+
+
+def velas_15min():
+    consulta = f"?symbol={HISTORICO_BINANCE.PAR}&interval=15m&limit=97"
+    for endereco in HISTORICO_BINANCE.ENDERECOS:
+        pedido = urllib.request.Request(endereco + consulta, headers={"Accept": "*/*", "User-Agent": "analise-ethereum"})
+        try:
+            with urllib.request.urlopen(pedido, timeout=8) as resposta:
+                velas = json.load(resposta)
+            if velas:
+                return velas
+        except (urllib.error.URLError, TimeoutError, ValueError):
+            continue
+    raise HTTPException(503, "Não deu para buscar o preço de agora na Binance. Tente de novo em instantes.")
+
+
+@app.get("/api/agora")
+def agora():
+    """O preço do ETH agora e o caminho dele nas últimas 24 horas (a Binance, ao vivo)."""
+    with BUSCANDO_AO_VIVO:
+        if AO_VIVO["dado"] is None or time.time() - AO_VIVO["quando"] > AO_VIVO_SEGUNDOS:
+            velas = velas_15min()
+            AO_VIVO["dado"] = simulador.ao_vivo(velas, int(time.time() * 1000))
+            AO_VIVO["quando"] = time.time()
+        return AO_VIVO["dado"]
+
+
 @app.get("/api/limites")
 def limites():
     p = precos()
@@ -493,4 +532,7 @@ if TELA.exists():
         # Todo endereço que não é da API devolve a tela, e o React decide o que mostrar. Não
         # se monta caminho de arquivo com o endereço: no Windows, "//outro-computador/pasta"
         # faria o servidor abrir conexão com a rede.
-        return FileResponse(TELA / "index.html")
+        # "no-cache": o navegador confere a cada visita se a tela mudou. Sem isso, depois de
+        # uma reconstrução ele usava o index.html antigo, que aponta para arquivos que não
+        # existem mais, e a tela ficava em branco.
+        return FileResponse(TELA / "index.html", headers={"Cache-Control": "no-cache"})

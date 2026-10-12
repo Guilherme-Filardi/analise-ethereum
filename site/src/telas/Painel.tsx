@@ -5,8 +5,8 @@ import { Explica } from '../Explica'
 import { GraficoFaixa, Mini } from '../Grafico'
 import { Icone } from '../Icones'
 import { ChanceDividida, FaixaVisual, Sinal, Variacao, fraseDoPalpite } from '../Pecas'
-import { data, deCada100, moeda, moedaCurta, pct, somarDias } from '../formato'
-import { useDado } from '../usar'
+import { data, deCada100, hora, moeda, moedaCurta, pct, somarDias } from '../formato'
+import { useAoVivo, useDado } from '../usar'
 import { Preco } from './Preco'
 
 const PALPITE_1: Record<string, string> = {
@@ -34,6 +34,7 @@ function Linha({ rotulo, valor, nota }: { rotulo: string; valor: ReactNode; nota
  */
 export function Painel() {
   const { dado: p, erro } = useDado<TipoPainel>('/api/painel')
+  const aoVivo = useAoVivo()
   if (erro) return <p className="erro" role="alert">{erro}</p>
   if (!p) return <p className="carregando">Carregando o painel...</p>
 
@@ -45,27 +46,41 @@ export function Painel() {
   const recentes = p.faixa_recente
   const dentroRecentes = recentes.filter((f) => f.real >= f.min && f.real <= f.max).length
   const v1 = p.palpite_1
+  const agora = aoVivo.dado
 
   return (
     <>
       <header className="cabecalho">
         <div>
           <h1>Painel do Ethereum</h1>
-          <p>Preço de 1 ETH em dólar, com o fechamento de {data(p.dia)} (21h em Brasília). Atualiza sozinho todo dia às 21h30.</p>
+          <p>
+            Preço de 1 ETH em dólar. O de agora vem da Binance a cada minuto. As previsões partem do fechamento de{' '}
+            {data(p.dia)} (21h em Brasília) e se refazem sozinhas todo dia às 21h30.
+          </p>
         </div>
       </header>
 
       <div className="grade">
         {/* ------------------------------------------------ as três respostas */}
         <section className="cartao s4" aria-labelledby="p1">
-          <h2 id="p1" className="pergunta">Quanto vale hoje</h2>
-          <p className="heroi-valor">{moeda(p.preco)}</p>
+          <h2 id="p1" className="pergunta">Quanto vale agora</h2>
+          <p className="heroi-valor">{moeda(agora ? agora.preco : p.preco)}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '8px 0 4px' }}>
-            <Variacao valor={p.variacoes['1d']} texto="no dia" />
+            {agora
+              ? <Variacao valor={agora.desde_21h} texto="desde as 21h" />
+              : <Variacao valor={p.variacoes['1d']} texto="no dia" />}
             <Variacao valor={p.variacoes['7d']} texto="em 7 dias" />
           </div>
-          <Mini pontos={p.ultimos_30} rotulo="Preço dos últimos 30 dias" altura={56} />
-          <p className="nota">Linha: os últimos 30 dias.</p>
+          {agora
+            ? <Mini pontos={agora.pontos} rotulo="Preço das últimas 24 horas" altura={56} />
+            : <Mini pontos={p.ultimos_30} rotulo="Preço dos últimos 30 dias" altura={56} />}
+          <p className="nota">
+            {agora
+              ? <>Ao vivo, às {hora(agora.hora)}. Linha: as últimas 24 horas. Fechamento de {data(p.dia)}, às 21h: {moeda(p.preco)}.</>
+              : aoVivo.erro
+                ? <>Sem o preço ao vivo agora: este é o fechamento de {data(p.dia)}, às 21h. Linha: os últimos 30 dias.</>
+                : <>Buscando o preço de agora... Este é o fechamento de {data(p.dia)}, às 21h.</>}
+          </p>
         </section>
 
         <section className="cartao s4" aria-labelledby="p2">
