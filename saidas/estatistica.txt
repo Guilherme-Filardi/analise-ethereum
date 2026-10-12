@@ -1,0 +1,49 @@
+FUNDAMENTOS ESTATÍSTICOS E RISCO DO ETH: 3342 dias, de 18/08/2017 a 11/10/2026
+
+1. OS DIAS SEGUEM O SINO (A CURVA NORMAL)? NÃO.
+  Variação média de um dia: +0,17%; desvio (o tamanho típico): 4,51%.
+  Curtose em excesso: 6,6 (no sino seria 0; acima de 0, ponta gorda). Assimetria: -0,13.
+  Jarque-Bera: 6.043, p < 0,001 (p pequeno: não é sino).
+  Dias com movimento maior que (para cima ou para baixo): reais contra o que o sino prevê
+      5%:  630 dias reais, sino 895,31 (menos que o sino)
+     10%:  148 dias reais, sino 89,24 (1,7 vezes o sino)
+     15%:   41 dias reais, sino 2,97 (13,8 vezes o sino)
+     20%:   10 dias reais, sino 0,03 (320,0 vezes o sino)
+  Pior dia: 12/03/2020, -44,6%. Melhor dia: 24/05/2021, +26,3%.
+
+2. ONTEM DIZ ALGO DE HOJE?
+  Direção (sobe ou cai): 6 de 30 defasagens fora da margem de ±0,034;
+  Ljung-Box (10 dias) p < 0,001.
+  Tamanho do movimento: 30 de 30 fora da margem; Ljung-Box p < 0,001.
+  Correlação de 1 dia: direção -0,056, tamanho +0,170.
+  Ou seja: a direção é quase cara ou coroa; dia agitado puxa dia agitado.
+
+3. ALGUM DIA DA SEMANA É PIOR? (escolhido em 2017 a 2021, conferido de 2022 em diante)
+    seg: treino  +0,38% (228 dias), prova  +0,29% (249 dias)
+    ter: treino  +0,07% (228 dias), prova  -0,20% (249 dias)
+    qua: treino  +0,38% (228 dias), prova  +0,41% (249 dias)
+    qui: treino  -0,40% (228 dias), prova  -0,36% (249 dias)
+    sex: treino  +0,68% (229 dias), prova  +0,03% (249 dias)
+    sáb: treino  +0,66% (228 dias), prova  +0,08% (250 dias)
+    dom: treino  +0,34% (228 dias), prova  +0,05% (250 dias)
+  Pior no treino: qui. Na prova, ele ficou -0,47% contra os outros dias, p 0,041 (ainda pior).
+
+4. ONDE O PREÇO PODE ESTAR EM 1 ANO (10.000 sorteios com pedaços de 30 dias do passado)
+  Hoje (11/10/2026): US$ 2.536,94. Em 11/10/2027:
+    90% dos caminhos entre US$ 703,07 e US$ 14.431,01; metade entre US$ 1.733,74 e US$ 5.966,12; mediana US$ 3.191,63.
+  Chance de terminar acima de hoje: 59,7%; de dobrar: 30,9%; de cair à metade em algum momento: 34,0%.
+  Conferência (75 cones desde 17/08/2019, só com o passado de cada um): o preço real caiu dentro do cone de 90% em 85,3%, abaixo em 0,0%, acima em 14,7%. Os anos se sobrepõem: os testes não são independentes.
+
+5. QUANTO SE PODE PERDER AMANHÃ (VaR de 95%: só 1 dia em 20 deve perder mais)
+  histórico: perder mais de 6,8% (nesses dias ruins, em média 10,3%)
+  adaptável: perder mais de 3,7% (nesses dias ruins, em média 5,6%)
+  Conferido, Histórico (todos os dias desde 2017): 83 rompimentos em 2841 dias = 2,9% (prometido 5%), Kupiec p < 0,001; 6 logo depois de outro, independência p 0,044.
+  Conferido, Adaptável (agitação recente): 135 rompimentos em 2841 dias = 4,8% (prometido 5%), Kupiec p 0,541; 13 logo depois de outro, independência p 0,015.
+
+6. OS PLACARES COM A MARGEM DE ERRO DE 95%
+  Sobe ou cai (previsão versão 2): 1434 em 2743 = 52,3%, margem 50,4% a 54,1%; contra 50%, p 0,017
+  Faixa de amanhã (versão 2): 2523 em 3141 = 80,3%, margem 78,9% a 81,7%; contra 80%, p 0,649
+  Faixa de 7 dias (versão 2): 2538 em 3129 = 81,1%, margem 77,2% a 84,5%, contando 447 semanas; contra 80%, p 0,557
+  Palpite da regra antiga (versão 1): 340 em 660 = 51,5%, margem 47,7% a 55,3%; contra 50%, p 0,436
+
+p é a chance de ver um resultado assim só por acaso. Abaixo de 0,05, dificilmente é acaso.
