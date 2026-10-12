@@ -114,6 +114,14 @@ def test_velas_por_semana_e_mes():
     assert abs(v["variacao"].iloc[0] - (107 / 100 - 1)) < 1e-12  # contra o domingo anterior
     assert abs(v["variacao"].iloc[1] - (206 / 107 - 1)) < 1e-12
     assert not v["aberta"].any()
+    # O período começa no meio de uma semana (só a quinta 09/01 e a sexta 10/01 dela): essa
+    # primeira vela tem menos dias, mas a semana já terminou. Só a última pode estar aberta.
+    simulador.PERIODOS["10d"] = 10
+    try:
+        corte = simulador.velas(dias, "10d", "semana")["velas"]
+    finally:
+        del simulador.PERIODOS["10d"]
+    assert corte["dias"].iloc[0] < 7 and not corte["aberta"].iloc[0]
     # Por mês, de 31/12/2019 a 09/02/2020: dezembro (um dia, sem anterior) fica de fora,
     # janeiro está completo e fevereiro ainda está aberto.
     m = simulador.velas(dias_ohlc(range(100, 141), "2019-12-31"), "tudo", "mes")["velas"]

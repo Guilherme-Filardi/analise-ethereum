@@ -9,12 +9,13 @@ Ligar à mão, da pasta do projeto:
 
 import subprocess
 import sys
+import threading
 from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -39,6 +40,9 @@ def serie(valores):
     """Série com data no índice vira uma lista [{data, valor}] para o gráfico."""
     return [{"data": f"{d:%Y-%m-%d}", "valor": round(float(v), 2)} for d, v in valores.items()]
 
+
+# O valor das simulações: maior que zero, finito e até 1 bilhão de dólares.
+VALOR = Query(gt=0, le=1e9, allow_inf_nan=False)
 
 # Cabeçalhos que túneis e proxies (Tailscale Funnel, Cloudflare...) acrescentam ao repassar uma
 # visita da internet. Se aparecer algum, a visita veio de fora, mesmo chegando por 127.0.0.1.
@@ -82,7 +86,7 @@ def hoje(pedido: Request):
     vivo = None
     if DIARIO.exists():
         diario = pd.read_csv(DIARIO, dtype=str, keep_default_na=False, encoding="utf-8-sig")
-        conferidos = diario[diario["resultado"] != ""]
+        conferidos = diario[(diario["resultado"] != "") & (diario["versao_regra"] == v.VERSAO)]
         vivo = v.placar(conferidos["veredito"], conferidos["resultado"] == "subiu")
     historico = v.placar(d["veredito"].iloc[:-1], d["amanha_subiu"].iloc[:-1])
 
@@ -197,7 +201,7 @@ def painel(pedido: Request):
     diario_1, diario_2 = ler_diario(DIARIO), ler_diario(DIARIO_2)
     vivo_1 = None
     if diario_1 is not None:
-        conferidos = diario_1[diario_1["resultado"] != ""]
+        conferidos = diario_1[(diario_1["resultado"] != "") & (diario_1["versao_regra"] == v.VERSAO)]
         vivo_1 = v.placar(conferidos["veredito"], conferidos["resultado"] == "subiu")
     ultimo_v1 = v1.iloc[-1]
     return {
@@ -211,6 +215,9 @@ def painel(pedido: Request):
         "ultimos_30": serie(p.iloc[-30:]),
         "previsao": previsao_de_hoje(d),
         "placar_2": {"teste": prev.placar(d), "teste_desde": desde(d),
+                     # A prova: os anos que a regra não viu ao ser escolhida (o número que vale).
+                     "prova": prev.placar(d.loc[simulador.estatistica.INICIO_PROVA:]),
+                     "prova_desde": simulador.estatistica.INICIO_PROVA,
                      "vivo": prev.placar_do_diario(diario_2) if diario_2 is not None else None},
         "palpite_1": {
             "veredito": ultimo_v1["veredito"], "chance_subir": numero(ultimo_v1["chance_subir"]),
@@ -268,6 +275,8 @@ def previsao():
                   "passo": prev.PASSO, "treino": prev.TREINO, "l2": prev.L2},
         "placar": prev.placar(d),
         "teste_desde": desde(d),
+        "placar_prova": prev.placar(d.loc[simulador.estatistica.INICIO_PROVA:]),
+        "prova_desde": simulador.estatistica.INICIO_PROVA,
         "calibracao": calibracao,
         "por_forca": por_forca,
         "por_ano": por_ano,
@@ -326,7 +335,7 @@ def limites():
 
 
 @app.get("/api/simular/compra")
-def simular_compra(valor: float, compra: str, venda: str = "hoje"):
+def simular_compra(compra: str, venda: str = "hoje", valor: float = VALOR):
     p = precos()
     # "hoje" = o último dia fechado (o dia de hoje só fecha às 21h em Brasília).
     venda = f"{p.index[-1]:%Y-%m-%d}" if venda == "hoje" else venda
@@ -349,7 +358,7 @@ def simular_compra(valor: float, compra: str, venda: str = "hoje"):
 
 
 @app.get("/api/simular/hoje")
-def simular_hoje(valor: float):
+def simular_hoje(valor: float = VALOR):
     c = simulador.cenarios_hoje(precos(), valor)
     for linha in c["prazos"]:
         for grupo in ("todos", "parecidos"):
@@ -360,7 +369,7 @@ def simular_hoje(valor: float):
 
 
 @app.get("/api/simular/vereditos")
-def simular_vereditos(valor: float, desde: str):
+def simular_vereditos(desde: str, valor: float = VALOR):
     try:
         r = simulador.seguir_vereditos(precos(), valor, desde)
     except ValueError as erro:
@@ -394,12 +403,36 @@ def estudo():
     return para_json(simulador.estudo(precos()))
 
 
+# ------------------------------------------------------------------ fundamentos estatísticos (etapa 9)
+# O cone sorteia 10 mil caminhos e o VaR se confere dia a dia desde 2019: a conta fica guardada
+# até o arquivo de preços mudar, como a da previsão. Os placares vêm das mesmas contas do painel.
+
+@lru_cache(maxsize=2)
+def contas_estatistica(marca):
+    t, d, _, v1 = contas(marca)
+    v = simulador.veredito
+    placar_1 = v.placar(v1["veredito"].iloc[:-1], v1["amanha_subiu"].iloc[:-1])
+    prova = d.loc[simulador.estatistica.INICIO_PROVA:]
+    return simulador.estatistica.analisar(t["fechamento"], simulador.previsao.placar(prova), placar_1)
+
+
+@app.get("/api/estatistica")
+def estatistica():
+    """Distribuição, autocorrelação, dia da semana, cone de 1 ano, VaR e a margem de erro dos placares."""
+    return contas_estatistica(marca_do_historico())
+
+
 @app.get("/api/guia")
 def guia():
     caminho = SAIDAS / "guia.txt"
     if not caminho.exists():
         raise HTTPException(404, "Falta o guia: rode o src\\06_guia.py.")
     return {"texto": caminho.read_text(encoding="utf-8")}
+
+
+# Uma busca por vez: dois cliques seguidos rodariam o 05, o 07 e o 08 em paralelo, gravando os
+# mesmos arquivos. (O agendamento das 21h30 ainda pode coincidir; as gravações são atômicas.)
+BUSCANDO = threading.Lock()
 
 
 @app.post("/api/atualizar")
@@ -410,6 +443,19 @@ def atualizar(pedido: Request):
     """
     if not neste_computador(pedido):
         raise HTTPException(403, "A busca de preço só pode ser pedida no computador onde o site roda.")
+    # Outra página aberta no navegador também chega de 127.0.0.1. Este cabeçalho, ela não
+    # consegue mandar: o navegador pediria licença antes, e a API não dá licença a ninguém.
+    if pedido.headers.get("x-pedido") != "site":
+        raise HTTPException(403, "A busca de preço só pode ser pedida pela tela do site.")
+    if not BUSCANDO.acquire(blocking=False):
+        raise HTTPException(409, "Já tem uma busca em andamento. Espere ela terminar.")
+    try:
+        return rodar_busca()
+    finally:
+        BUSCANDO.release()
+
+
+def rodar_busca():
     saida = []
     for script in ("05_historico_binance.py", "07_veredito.py", "08_previsao.py"):
         rodada = subprocess.run(
@@ -422,8 +468,20 @@ def atualizar(pedido: Request):
     return {"ok": True, "saida": "\n".join(saida)}
 
 
-# As imagens e relatórios de saidas/ (os gráficos do guia aparecem na tela por aqui).
-app.mount("/saidas", StaticFiles(directory=SAIDAS), name="saidas")
+@app.get("/saidas/{nome}")
+def imagem(nome: str):
+    """Os gráficos PNG de saidas/ (o guia mostra eles na tela). Só PNG, só pelo nome, sem pasta.
+
+    O nome é conferido como texto antes de tocar no disco: no Windows, um caminho como
+    "\\\\outro-computador\\pasta" faria o servidor ir buscar o arquivo na rede.
+    """
+    seguro = (nome.endswith(".png") and not nome.startswith(("exemplo_", "."))
+              and not any(c in nome for c in '/\\:') and ".." not in nome)
+    arquivo = SAIDAS / nome
+    if not seguro or not arquivo.is_file():
+        raise HTTPException(404, "Não existe esse gráfico.")
+    return FileResponse(arquivo)
+
 
 # A tela construída. Qualquer endereço que não seja da API devolve o index.html, e o React
 # decide o que mostrar.
@@ -432,7 +490,7 @@ if TELA.exists():
 
     @app.get("/{caminho:path}")
     def tela(caminho: str):
-        arquivo = TELA / caminho
-        if caminho and arquivo.is_file() and TELA in arquivo.resolve().parents:
-            return FileResponse(arquivo)
+        # Todo endereço que não é da API devolve a tela, e o React decide o que mostrar. Não
+        # se monta caminho de arquivo com o endereço: no Windows, "//outro-computador/pasta"
+        # faria o servidor abrir conexão com a rede.
         return FileResponse(TELA / "index.html")

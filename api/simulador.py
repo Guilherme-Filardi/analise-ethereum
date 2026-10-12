@@ -31,6 +31,7 @@ guia = carregar("06_guia")
 veredito = carregar("07_veredito")
 analise_gas = carregar("04_analise_gas")
 previsao = carregar("08_previsao")
+estatistica = carregar("09_estatistica")
 GAS = PASTA / "dados" / "gas.csv"
 
 
@@ -109,7 +110,9 @@ def velas(dias, periodo, escala="dia"):
         aberta = v["fim"] == ultimo_dia
         aberta &= (ultimo_dia + pd.Timedelta(days=1)).month == ultimo_dia.month
     else:
-        aberta = v["dias"] < completa
+        # Só a última vela pode estar aberta. A primeira também pode ter menos dias (o período
+        # começou no meio da semana), mas essa semana já terminou.
+        aberta = (v["fim"] == ultimo_dia) & (v["dias"] < completa)
     va = v["variacao"]
     return {
         "velas": v.assign(aberta=aberta),
