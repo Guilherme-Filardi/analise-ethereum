@@ -48,6 +48,14 @@ def test_nao_espia_o_futuro():
     longo, _ = previsao.previsoes(t)
     assert curto["chance_subir"].notna().sum() > 50  # a série é longa o bastante para ter chance
     pd.testing.assert_frame_equal(curto[COLUNAS_PREVISAO], longo.loc[curto.index, COLUNAS_PREVISAO])
+    # Um corte só não pega um vazamento dentro do bloco de 30 dias da regressão (ele aconteceria
+    # dos dois lados do corte). Cortando dia a dia ao longo de um bloco inteiro, o último dia de
+    # cada corte tem que bater com o mesmo dia da série inteira.
+    for n in range(671, 671 + previsao.PASSO + 1):
+        ultimo = previsao.previsoes(t.iloc[:n])[0].iloc[-1]
+        esperado = longo.iloc[n - 1]
+        for coluna in COLUNAS_PREVISAO:
+            assert ultimo[coluna] == esperado[coluna] or (pd.isna(ultimo[coluna]) and pd.isna(esperado[coluna])), (n, coluna)
 
 
 def test_faixa_cobre_80_por_cento():
@@ -123,6 +131,19 @@ def test_diario_de_ponta_a_ponta():
         assert primeiro["preco_7"] == f"{p.iloc[806]:.2f}"
         assert primeiro["dentro_7"] == previsao.sim_nao(longo.loc[dia, "dentro_7"])
         assert diario["preco_1"].iloc[1] == f"{p.iloc[801]:.2f}"  # o dia 801 também foi conferido
+        # O histórico voltou no tempo (download incompleto, arquivo velho): o dia 790 já tem
+        # resultado conhecido e não pode entrar no diário ao vivo.
+        diario = previsao.atualizar_diario(caminho, previsao.previsoes(t.iloc[:790])[0], "agora")
+        assert len(diario) == 3 and f"{t.index[789]:%Y-%m-%d}" not in set(diario["dia"])
+
+
+def test_placar_ao_vivo_so_da_versao_atual():
+    diario = pd.DataFrame({
+        "versao_regra": [previsao.VERSAO, "outra", previsao.VERSAO],
+        "acertou": ["sim", "não", "não"], "dentro_1": ["sim", "não", "sim"], "dentro_7": ["", "", ""],
+    })
+    p = previsao.placar_do_diario(diario)
+    assert p["dias"] == 2 and p["taxa"] == 0.5 and p["faixa_1_dentro"] == 1.0 and p["faixa_7_dias"] == 0
 
 
 def rodar_main(t):

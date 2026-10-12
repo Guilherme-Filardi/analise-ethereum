@@ -49,8 +49,13 @@ echo.
 echo   Abrindo o site da analise...
 call :liberar 8010
 
-if not exist "site\node_modules" (
-    echo   Primeira vez neste computador: instalando a tela, uns minutos...
+REM Instala na primeira vez, e de novo quando a lista de bibliotecas da tela muda (um git pull
+REM que traz biblioteca nova): sem isso, o build quebraria por falta dela.
+set "INSTALAR="
+if not exist "site\node_modules" set "INSTALAR=1"
+if not defined INSTALAR powershell -NoProfile -Command "$m='site\node_modules\.package-lock.json'; if(-not (Test-Path $m)){ exit 1 }; $t=(Get-Item $m).LastWriteTimeUtc; if(@(Get-Item 'site\package.json','site\package-lock.json' -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTimeUtc -gt $t }).Count){ exit 1 }; exit 0" || set "INSTALAR=1"
+if defined INSTALAR (
+    echo   Instalando as bibliotecas da tela, uns minutos...
     pushd site
     call npm install --no-fund --no-audit >"%LOGS%\npm_install.log" 2>&1
     if errorlevel 1 (

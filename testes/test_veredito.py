@@ -77,6 +77,10 @@ def test_diario_confere_ontem_e_anota_hoje_uma_vez_so():
         # Rodar de novo no mesmo dia não duplica nada.
         diario = veredito.atualizar_diario(caminho, d2, "agora")
         assert len(diario) == 2
+        # O histórico voltou no tempo: o dia 140 já tem resultado conhecido e não entra.
+        d_velho = veredito.vereditos(veredito.caracteristicas(p.iloc[:140]))
+        diario = veredito.atualizar_diario(caminho, d_velho, "agora")
+        assert len(diario) == 2
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ Uso:
     python src/08_previsao.py dados/exemplo_eth_diario_binance.csv     (outro arquivo, para teste)
 """
 
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -47,6 +48,10 @@ PASSO = 30           # a regressão se reajusta a cada 30 dias
 L2 = 300.0           # freio da regressão: quanto maior, mais perto de 50% ela fica
 FORCA = [(0.04, "forte"), (0.02, "média"), (0.0, "fraca")]  # distância da chance até 50%
 # ------------------------------------------------------------------
+
+# A regra foi escolhida olhando os resultados até 2021. O placar que vale é o dos anos seguintes
+# (a "prova"): somar 2019 a 2021 inflaria o acerto. O mesmo corte do src/09_estatistica.py.
+INICIO_PROVA = "2022-01-01"
 
 NOMES_SINAIS = {
     "r1": "variação de ontem",
@@ -225,6 +230,20 @@ def sim_nao(valor):
     return "" if pd.isna(valor) else ("sim" if valor else "não")
 
 
+def gravar(tabela, caminho, **opcoes):
+    """Grava num arquivo temporário e troca de uma vez (os.replace).
+
+    Quem ler ao mesmo tempo (o site, ou o agendamento das 21h30 junto com o botão "Buscar
+    agora") nunca vê o arquivo pela metade. Se der erro, o arquivo antigo fica como estava.
+    """
+    temporario = caminho.with_name(caminho.name + ".gravando")
+    try:
+        tabela.to_csv(temporario, index=False, **opcoes)
+        os.replace(temporario, caminho)
+    finally:
+        temporario.unlink(missing_ok=True)
+
+
 def atualizar_diario(caminho, d, agora_utc):
     """Confere o que já fechou e acrescenta a previsão do último dia (uma vez por dia de dado).
 
@@ -252,7 +271,10 @@ def atualizar_diario(caminho, d, agora_utc):
 
     ultimo = d.iloc[-1]
     dia = f"{d.index[-1]:%Y-%m-%d}"
-    if dia not in set(diario["dia"]) and pd.notna(ultimo["chance_subir"]):
+    # Nunca um dia anterior ao último anotado: se o histórico voltar no tempo, esse dia já tem
+    # resultado conhecido, e anotá-lo seria espiar.
+    novo = diario.empty or dia > diario["dia"].max()
+    if dia not in set(diario["dia"]) and novo and pd.notna(ultimo["chance_subir"]):
         nova = {c: "" for c in COLUNAS}
         nova.update({
             "dia": dia, "preco": f"{ultimo['preco']:.2f}",
@@ -264,12 +286,18 @@ def atualizar_diario(caminho, d, agora_utc):
         diario = pd.concat([diario, pd.DataFrame([nova])], ignore_index=True)
 
     caminho.parent.mkdir(exist_ok=True)
-    diario.to_csv(caminho, index=False, encoding="utf-8-sig")  # "-sig": o Excel abre os acentos
+    try:
+        gravar(diario, caminho, encoding="utf-8-sig")  # "-sig": o Excel abre os acentos
+    except PermissionError:
+        print(f"ATENÇÃO: não consegui gravar {caminho.name} (está aberto no Excel?). Feche o"
+              " arquivo e rode de novo ainda hoje: amanhã este dia não entra mais no diário.")
+
     return diario
 
 
 def placar_do_diario(diario):
-    """O placar ao vivo, só com o que foi anotado antes de acontecer."""
+    """O placar ao vivo, só com o que foi anotado antes de acontecer, e só da versão atual."""
+    diario = diario[diario["versao_regra"] == VERSAO]
     def taxa(coluna):
         x = diario.loc[diario[coluna] != "", coluna]
         return (len(x), float((x == "sim").mean())) if len(x) else (0, None)
@@ -311,7 +339,12 @@ def main():
     diario = atualizar_diario(SAIDAS / f"{prefixo}diario_previsao.csv", d, agora.strftime("%Y-%m-%d %H:%M UTC"))
 
     hoje, dia = d.iloc[-1], d.index[-1]
-    vivo, teste = placar_do_diario(diario), placar(d)
+    vivo = placar_do_diario(diario)
+    prova = d.loc[INICIO_PROVA:]
+    teste = placar(prova) if len(prova) else None
+    if teste is None:  # dado que acaba antes da prova (só nos exemplos): usa o teste inteiro
+        prova, teste = d, placar(d)
+    inicio = prova["chance_subir"].first_valid_index() or prova.index[0]
     linhas = ["*** EXEMPLO: DADO FICTÍCIO, SÓ PARA TESTAR O SCRIPT ***", ""] if exemplo else []
     linhas += [
         f"PREVISÃO {VERSAO}, A PARTIR DO FECHAMENTO DE {dia:%d/%m/%Y}: {moeda(hoje['preco'])}",
@@ -329,8 +362,8 @@ def main():
         linhas.append(f"  {item['empurrao']:+.3f}  {item['sinal']}")
     linhas += [
         "",
-        f"Teste com o passado ({d['chance_subir'].first_valid_index():%d/%m/%Y} em diante, só com o que"
-        " se sabia em cada dia):",
+        f"Na prova ({inicio:%d/%m/%Y} em diante, anos que a regra não viu ao ser escolhida; cada dia só"
+        " com o que se sabia nele):",
         # Com a primeira chance caindo no último dia, ainda não há palpite conferido no teste.
         f"  palpite: {teste['acertos']} acertos em {teste['dias']} dias = {br_pct(teste['taxa'])}"
         f" (dizer 'sobe' todo dia: {br_pct(teste['sempre_sobe'])})" if teste["dias"] else

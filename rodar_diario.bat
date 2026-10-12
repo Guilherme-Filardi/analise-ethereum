@@ -9,5 +9,7 @@ echo ===== %date% %time% >> saidas\log_diario.txt
 "..\.venv\Scripts\python.exe" src\05_historico_binance.py >> saidas\log_diario.txt 2>&1
 "..\.venv\Scripts\python.exe" src\07_veredito.py >> saidas\log_diario.txt 2>&1
 "..\.venv\Scripts\python.exe" src\08_previsao.py >> saidas\log_diario.txt 2>&1
+rem Os relatorios sao UTF-8: sem isto, o "type" mostra os acentos trocados.
+chcp 65001 >nul
 type saidas\veredito_hoje.txt
 type saidas\previsao_hoje.txt

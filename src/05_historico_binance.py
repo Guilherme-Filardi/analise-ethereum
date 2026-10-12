@@ -12,6 +12,7 @@ Uso:
 """
 
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -87,6 +88,20 @@ def baixar(pedir, agora_ms):
     return tabela.drop_duplicates("data").reset_index(drop=True)
 
 
+def gravar(tabela, caminho, **opcoes):
+    """Grava num arquivo temporário e troca de uma vez (os.replace).
+
+    Quem ler ao mesmo tempo (o site, ou o agendamento das 21h30 junto com o botão "Buscar
+    agora") nunca vê o arquivo pela metade. Se der erro, o arquivo antigo fica como estava.
+    """
+    temporario = caminho.with_name(caminho.name + ".gravando")
+    try:
+        tabela.to_csv(temporario, index=False, **opcoes)
+        os.replace(temporario, caminho)
+    finally:
+        temporario.unlink(missing_ok=True)
+
+
 def main():
     if len(sys.argv) > 1:
         origem = Path(sys.argv[1])
@@ -103,8 +118,17 @@ def main():
         # Sem dado completo, para aqui: não grava nada e não mexe no CSV que já existir.
         sys.exit(f"Falhou o download ({erro}). Nada foi gravado.")
 
+    # Uma resposta vazia ou mais curta que o histórico que já existe é defeito da fonte, e não
+    # dado novo: gravar por cima apagaria dias e faria o 07 e o 08 anotarem um dia velho.
+    if tabela.empty:
+        sys.exit("A Binance respondeu sem nenhum dia. Nada foi gravado.")
+    if saida.exists():
+        antes = pd.read_csv(saida, usecols=["data"], parse_dates=["data"])["data"]
+        if len(tabela) < len(antes) or pd.Timestamp(tabela["data"].iloc[-1]) < antes.iloc[-1]:
+            sys.exit(f"A resposta veio mais curta que o histórico ({len(tabela)} dias contra {len(antes)},"
+                     f" até {tabela['data'].iloc[-1]:%d/%m/%Y}). Nada foi gravado.")
     saida.parent.mkdir(exist_ok=True)
-    tabela.to_csv(saida, index=False)
+    gravar(tabela, saida)
 
     ultimo = tabela.iloc[-1]
     fechamento = f"{float(ultimo['fechamento']):,.2f}".translate(str.maketrans(",.", ".,"))

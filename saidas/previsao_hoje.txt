@@ -12,10 +12,10 @@ Os sinais que mais pesaram hoje (+ empurra para subir, - para cair):
   -0.021  variação de ontem
   -0.018  agitação de 30 dias
 
-Teste com o passado (08/04/2019 em diante, só com o que se sabia em cada dia):
-  palpite: 1434 acertos em 2743 dias = 52,3% (dizer 'sobe' todo dia: 51,7%)
-  faixa de amanhã: o preço caiu dentro em 80,3% de 3141 dias
-  faixa de 7 dias: o preço caiu dentro em 81,1% de 3129 dias
+Na prova (01/01/2022 em diante, anos que a regra não viu ao ser escolhida; cada dia só com o que se sabia nele):
+  palpite: 901 acertos em 1744 dias = 51,7% (dizer 'sobe' todo dia: 50,3%)
+  faixa de amanhã: o preço caiu dentro em 80,3% de 1744 dias
+  faixa de 7 dias: o preço caiu dentro em 80,8% de 1738 dias
 Ao vivo (diário): ainda sem palpite conferido
 
 A faixa é a parte forte: o tamanho do movimento é previsível. A direção de um dia é quase

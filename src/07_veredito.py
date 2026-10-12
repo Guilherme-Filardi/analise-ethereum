@@ -17,6 +17,7 @@ Uso:
     python src/07_veredito.py dados/exemplo_eth_diario_binance.csv     (outro arquivo, para teste)
 """
 
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -100,6 +101,20 @@ def placar(vereditos_, subiu):
             "sempre_sobe": sempre_sobe / len(conta)}
 
 
+def gravar(tabela, caminho, **opcoes):
+    """Grava num arquivo temporário e troca de uma vez (os.replace).
+
+    Quem ler ao mesmo tempo (o site, ou o agendamento das 21h30 junto com o botão "Buscar
+    agora") nunca vê o arquivo pela metade. Se der erro, o arquivo antigo fica como estava.
+    """
+    temporario = caminho.with_name(caminho.name + ".gravando")
+    try:
+        tabela.to_csv(temporario, index=False, **opcoes)
+        os.replace(temporario, caminho)
+    finally:
+        temporario.unlink(missing_ok=True)
+
+
 def atualizar_diario(caminho, d, hoje_utc):
     """Confere os vereditos pendentes e acrescenta o de hoje (uma vez por dia de dado)."""
     colunas = ["dia", "preco", "tendencia", "distancia_do_recorde", "semana", "dias_parecidos",
@@ -132,7 +147,10 @@ def atualizar_diario(caminho, d, hoje_utc):
     #    depois, já sabendo o resultado, não seria um veredito "ao vivo".
     ultimo = d.iloc[-1]
     dia = f"{d.index[-1]:%Y-%m-%d}"
-    if dia not in set(diario["dia"]):
+    # E nunca um dia anterior ao último anotado: se o histórico voltar no tempo (um download
+    # incompleto, um git pull de um arquivo velho), esse dia já tem resultado conhecido.
+    novo = diario.empty or dia > diario["dia"].max()
+    if dia not in set(diario["dia"]) and novo:
         nova = {
             "dia": dia,
             "preco": f"{ultimo['preco']:.2f}",
@@ -150,7 +168,11 @@ def atualizar_diario(caminho, d, hoje_utc):
 
     caminho.parent.mkdir(exist_ok=True)
     # "utf-8-sig" faz o Excel abrir os acentos certos ("não", "distância").
-    diario.to_csv(caminho, index=False, encoding="utf-8-sig")
+    try:
+        gravar(diario, caminho, encoding="utf-8-sig")
+    except PermissionError:
+        print(f"ATENÇÃO: não consegui gravar {caminho.name} (está aberto no Excel?). Feche o"
+              " arquivo e rode de novo ainda hoje: amanhã este dia não entra mais no diário.")
     return diario
 
 
@@ -184,7 +206,7 @@ def relatorio(d, diario, exemplo):
         f" 'sem vantagem' entre os dois ou com menos de {MINIMO} dias parecidos.",
         "",
     ]
-    conferidos = diario[diario["resultado"] != ""]
+    conferidos = diario[(diario["resultado"] != "") & (diario["versao_regra"] == VERSAO)]
     if len(conferidos):
         ontem = conferidos.iloc[-1]
         linhas.append(f"Último conferido: {pd.Timestamp(ontem['dia']):%d/%m} disse"
