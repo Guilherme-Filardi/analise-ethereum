@@ -211,7 +211,7 @@ export function Hoje() {
             <h2 id="titulo-faixas" className="cartao-titulo">Onde o preço deve fechar</h2>
             <span className="selo neutro pequeno">80% de chance</span>
           </div>
-          <div className="rotulo">Amanhã, {data(amanha)}</div>
+          <div className="rotulo">Em {data(amanha)}, às 21h</div>
           <p className="valor-grande num">{moeda(h.faixa1_min)} a {moeda(h.faixa1_max)}</p>
           <FaixaVisual min={h.faixa1_min} max={h.faixa1_max} hoje={h.preco} />
           <p className="nota">{larguraDaFaixa(h, h.faixa1_min, h.faixa1_max)}</p>
@@ -234,7 +234,7 @@ export function Hoje() {
 
         <section className="cartao s5" aria-labelledby="titulo-chance">
           <div className="cartao-cab">
-            <h2 id="titulo-chance" className="cartao-titulo">Sobe ou cai amanhã?</h2>
+            <h2 id="titulo-chance" className="cartao-titulo">Sobe ou cai até {data(amanha).slice(0, 5)}, às 21h?</h2>
             <SeloPalpite palpite={h.palpite} forca={h.forca} pequeno />
           </div>
           {h.chance_subir !== null && (

@@ -30,7 +30,7 @@ function Linha({ rotulo, valor, nota }: { rotulo: string; valor: ReactNode; nota
 
 /**
  * A página inicial. Em cima, as três perguntas que importam, com a resposta grande:
- * quanto vale hoje, onde deve fechar amanhã, e se sobe ou cai. Embaixo, o detalhe.
+ * quanto vale agora, onde deve fechar no próximo fechamento, e se sobe ou cai até lá. Embaixo, o detalhe.
  */
 export function Painel() {
   const { dado: p, erro } = useDado<TipoPainel>('/api/painel')
@@ -84,7 +84,7 @@ export function Painel() {
         </section>
 
         <section className="cartao s4" aria-labelledby="p2">
-          <h2 id="p2" className="pergunta">Onde deve fechar amanhã ({data(amanha).slice(0, 5)})</h2>
+          <h2 id="p2" className="pergunta">Onde deve fechar em {data(amanha).slice(0, 5)}, às 21h</h2>
           <p className="valor-resposta num">{moedaCurta(prev.faixa1_min)} a {moedaCurta(prev.faixa1_max)}</p>
           <FaixaVisual min={prev.faixa1_min} max={prev.faixa1_max} hoje={prev.preco} />
           <p className="nota">
@@ -95,12 +95,16 @@ export function Painel() {
         </section>
 
         <section className="cartao s4" aria-labelledby="p3">
-          <h2 id="p3" className="pergunta">Sobe ou cai amanhã</h2>
+          <h2 id="p3" className="pergunta">Sobe ou cai até {data(amanha).slice(0, 5)}, às 21h</h2>
           {prev.chance_subir !== null ? (
             <>
               <p className="valor-resposta">{fraseDoPalpite(prev.palpite, prev.forca)}</p>
               <ChanceDividida chance={prev.chance_subir} />
               <p className="nota" style={{ marginTop: 8 }}>
+                Palpite feito com o fechamento de {data(p.dia).slice(0, 5)}, às 21h. O próximo sai em{' '}
+                {data(amanha).slice(0, 5)}, às 21h30.
+              </p>
+              <p className="nota" style={{ marginTop: 4 }}>
                 {teste?.taxa != null && <>Desde 2022, o palpite acertou <strong>{pct(teste.taxa)}</strong> das vezes. Um chute acerta 50%.</>}
               </p>
             </>
@@ -157,7 +161,7 @@ export function Painel() {
             </>
           )}
           <Linha rotulo="Ao vivo (anotado antes de acontecer)"
-            nota={vivo && vivo.dias ? `${vivo.dias} ${vivo.dias === 1 ? 'dia conferido' : 'dias conferidos'}` : 'a conferência começa amanhã'}
+            nota={vivo && vivo.dias ? `${vivo.dias} ${vivo.dias === 1 ? 'dia conferido' : 'dias conferidos'}` : `a primeira conferência sai em ${data(amanha).slice(0, 5)}, às 21h30`}
             valor={vivo && vivo.dias && vivo.taxa !== null ? pct(vivo.taxa) : '–'} />
           <p className="frase" style={{ fontSize: '0.9rem' }}>
             <strong>Resumo:</strong> a faixa cumpre o que promete. O sobe ou cai é quase cara ou coroa.
